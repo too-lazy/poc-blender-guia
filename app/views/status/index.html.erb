@@ -1,0 +1,123 @@
+<% if @runs.any? { |r| r.status.in?(%w[pending running]) } %>
+  <meta http-equiv="refresh" content="5">
+<% end %>
+
+<div class="space-y-6">
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-3xl font-black text-gray-900">Workflow Status</h1>
+      <p class="text-sm text-gray-500 font-medium mt-1">Live view of all pipeline runs</p>
+    </div>
+    <div class="flex items-center gap-2">
+      <span class="inline-block w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+      <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Auto-refreshing</span>
+    </div>
+  </div>
+
+  <!-- Filter tabs -->
+  <div class="flex gap-2">
+    <% [
+      ["all", "All", @counts[:all]],
+      ["running", "Running", @counts[:running]],
+      ["completed", "Completed", @counts[:completed]],
+      ["failed", "Failed", @counts[:failed]]
+    ].each do |key, label, count| %>
+      <%= link_to status_path(filter: key),
+          class: "brutalist-btn #{@filter == key ? 'brutalist-btn-primary' : 'brutalist-btn-ghost'} !py-2 !px-4 !text-xs" do %>
+        <%= label %> <span class="ml-1 opacity-70">(<%= count %>)</span>
+      <% end %>
+    <% end %>
+  </div>
+
+  <!-- Runs list -->
+  <div class="space-y-4">
+    <% if @runs.any? %>
+      <% @runs.each do |run| %>
+        <div class="brutalist-card" id="run-<%= run.id %>">
+          <!-- Header -->
+          <div class="px-6 py-4 border-b-2 border-black flex items-center justify-between bg-white">
+            <div class="flex items-center gap-4">
+              <%= render partial: "shared/status_badge", locals: { status: run.status } %>
+              <div>
+                <span class="font-black text-gray-900">Run #<%= run.id %></span>
+                <span class="text-sm text-gray-500 ml-2">
+                  <% if run.case.patient %>
+                    <%= run.case.patient.name %> ·
+                  <% end %>
+                  <%= run.case.description&.truncate(50) || "Quick process" %>
+                </span>
+              </div>
+            </div>
+            <div class="flex items-center gap-4">
+              <% if run.duration %>
+                <span class="text-xs font-bold text-gray-500"><%= "%.1f" % run.duration %>s</span>
+              <% end %>
+              <span class="text-xs text-gray-400 font-medium"><%= time_ago_in_words(run.created_at) %> ago</span>
+              <% if run.case.patient %>
+                <%= link_to "View Case →", patient_case_path(run.case.patient, run.case),
+                    class: "text-xs font-bold text-brand hover:underline" %>
+              <% end %>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 <%= run.render_output.attached? ? 'lg:grid-cols-3' : '' %>">
+            <!-- Log output -->
+            <div class="<%= run.render_output.attached? ? 'lg:col-span-2' : '' %> p-4">
+              <div class="text-xs font-black uppercase tracking-wider text-gray-500 mb-2">
+                <% if run.status.in?(%w[pending running]) %>
+                  <span class="inline-block w-2 h-2 bg-blue-500 rounded-full animate-pulse mr-1"></span>
+                <% end %>
+                Log Output
+              </div>
+              <% if run.log_output.present? %>
+                <pre class="text-xs text-gray-600 whitespace-pre-wrap bg-cream border-2 border-gray-200 p-3 max-h-48 overflow-y-auto font-mono"><%= run.log_output %></pre>
+              <% elsif run.error_message.present? %>
+                <pre class="text-xs text-red-700 whitespace-pre-wrap bg-red-50 border-2 border-red-300 p-3 max-h-48 overflow-y-auto font-mono"><%= run.error_message %></pre>
+              <% else %>
+                <div class="text-sm text-gray-400 italic bg-cream border-2 border-gray-200 p-3">
+                  <% if run.status == "pending" %>
+                    Waiting to start…
+                  <% elsif run.status == "running" %>
+                    Processing… logs will appear here.
+                  <% else %>
+                    No log output.
+                  <% end %>
+                </div>
+              <% end %>
+            </div>
+
+            <!-- Render preview -->
+            <% if run.render_output.attached? %>
+              <div class="p-4 border-l-2 border-black" data-controller="lightbox">
+                <div class="text-xs font-black uppercase tracking-wider text-gray-500 mb-2">Render Output</div>
+                <div class="bg-cream border-2 border-gray-200 p-2 cursor-pointer hover:border-brand transition-colors"
+                     data-action="click->lightbox#open"
+                     data-lightbox-src-value="<%= url_for(run.render_output) %>">
+                  <%= image_tag url_for(run.render_output),
+                      class: "w-full h-auto",
+                      alt: "Blender render output" %>
+                </div>
+                <div class="mt-2 flex gap-2">
+                  <span class="text-xs font-bold text-teal-700">📸 Click to expand</span>
+                  <%= link_to "⬇", rails_blob_path(run.render_output, disposition: "attachment"),
+                      class: "text-xs font-bold text-brand hover:underline" %>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    <% else %>
+      <div class="brutalist-card p-16 text-center">
+        <p class="text-gray-400 text-lg font-bold">
+          <% if @filter == "all" %>
+            No workflow runs yet.
+          <% else %>
+            No <%= @filter %> runs found.
+          <% end %>
+        </p>
+        <p class="text-gray-400 text-sm mt-2">Runs will appear here when you execute a workflow.</p>
+      </div>
+    <% end %>
+  </div>
+</div>

@@ -36,13 +36,16 @@
 
   <!-- Render Output -->
   <% if @run.render_output.attached? %>
-    <div class="brutalist-card p-6">
+    <div class="brutalist-card p-6" data-controller="lightbox">
       <h2 class="text-lg font-black text-gray-900 mb-4">Render Output</h2>
-      <div class="bg-cream border-2 border-black p-4 flex justify-center">
+      <div class="bg-cream border-2 border-black p-4 flex justify-center cursor-pointer hover:border-brand transition-colors"
+           data-action="click->lightbox#open"
+           data-lightbox-src-value="<%= url_for(@run.render_output) %>">
         <%= image_tag url_for(@run.render_output), class: "max-w-full max-h-96", alt: "Occlusal render" %>
       </div>
-      <div class="mt-4 text-center">
-        <%= link_to "⬇ Download PNG", rails_blob_path(@run.render_output, disposition: "attachment"), class: "brutalist-btn brutalist-btn-accent" %>
+      <div class="mt-4 flex items-center justify-center gap-4">
+        <span class="text-xs font-bold text-gray-500">📸 Click image to view full size</span>
+        <%= link_to "⬇ Download PNG", rails_blob_path(@run.render_output, disposition: "attachment"), class: "brutalist-btn brutalist-btn-accent !py-2 !px-4 !text-xs" %>
       </div>
     </div>
   <% end %>
