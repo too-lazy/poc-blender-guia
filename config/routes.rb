@@ -3,6 +3,7 @@ Rails.application.routes.draw do
 
   get "status", to: "status#index"
   resource :quick_process, only: [ :new, :create, :show ]
+  resources :workflow_runs, only: [ :show ], path: "runs"
 
   resources :patients do
     resources :cases, except: [ :index ] do

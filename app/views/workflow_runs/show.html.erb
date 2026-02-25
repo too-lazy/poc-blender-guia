@@ -1,8 +1,17 @@
+<% if @run.status.in?(%w[pending running]) %>
+  <meta http-equiv="refresh" content="5">
+<% end %>
+
 <div class="space-y-6">
   <!-- Breadcrumb -->
   <div class="text-sm font-bold text-gray-500">
-    <%= link_to @patient.name, patient_path(@patient), class: "text-brand hover:underline" %> ›
-    <%= link_to @case.description.truncate(40), patient_case_path(@patient, @case), class: "text-brand hover:underline" %> ›
+    <% if @patient %>
+      <%= link_to @patient.name, patient_path(@patient), class: "text-brand hover:underline" %> ›
+      <%= link_to @case.description.truncate(40), patient_case_path(@patient, @case), class: "text-brand hover:underline" %> ›
+    <% else %>
+      <%= link_to "Quick Processes", quick_process_path, class: "text-brand hover:underline" %> ›
+      <span class="text-gray-600"><%= @case.description&.truncate(40) || "Quick process" %></span> ›
+    <% end %>
     <span class="text-gray-700">Run #<%= @run.id %></span>
   </div>
 

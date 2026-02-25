@@ -16,7 +16,7 @@
       <% @recent_runs.each do |run| %>
         <div class="brutalist-card" id="quick-run-<%= run.id %>">
           <!-- Header -->
-          <div class="px-6 py-4 border-b-2 border-black flex items-center justify-between">
+          <%= link_to workflow_run_path(run), class: "block px-6 py-4 border-b-2 border-black flex items-center justify-between hover:bg-cream transition-colors" do %>
             <div class="flex items-center gap-4">
               <%= render partial: "shared/status_badge", locals: { status: run.status } %>
               <div>
@@ -29,8 +29,9 @@
                 <span class="text-xs font-bold text-gray-500"><%= "%.1f" % run.duration %>s</span>
               <% end %>
               <span class="text-xs text-gray-400 font-medium"><%= time_ago_in_words(run.created_at) %> ago</span>
+              <span class="text-xs font-bold text-brand">View details →</span>
             </div>
-          </div>
+          <% end %>
 
           <!-- Body: log + render -->
           <div class="grid grid-cols-1 <%= run.render_output.attached? ? 'lg:grid-cols-3' : '' %>">
