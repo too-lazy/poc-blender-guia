@@ -31,7 +31,7 @@
     <% if @recent_runs.any? %>
       <div class="divide-y-2 divide-gray-200">
         <% @recent_runs.each do |run| %>
-          <div class="px-6 py-4 flex items-center justify-between hover:bg-cream transition-colors">
+          <%= link_to workflow_run_path(run), class: "block px-6 py-4 flex items-center justify-between hover:bg-cream transition-colors" do %>
             <div>
               <div class="font-bold text-gray-900"><%= run.case.patient&.name || "Quick process" %></div>
               <div class="text-sm text-gray-500"><%= run.case.description.truncate(60) %></div>
@@ -39,8 +39,9 @@
             <div class="flex items-center gap-3">
               <%= render partial: "shared/status_badge", locals: { status: run.status } %>
               <span class="text-xs font-medium text-gray-400"><%= time_ago_in_words(run.created_at) %> ago</span>
+              <span class="text-xs font-bold text-brand">→</span>
             </div>
-          </div>
+          <% end %>
         <% end %>
       </div>
     <% else %>
