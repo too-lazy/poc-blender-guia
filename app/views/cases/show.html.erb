@@ -1,0 +1,71 @@
+<div class="space-y-6">
+  <!-- Breadcrumb -->
+  <div class="text-sm text-gray-500">
+    <%= link_to @patient.name, patient_path(@patient), class: "text-indigo-600 hover:text-indigo-800" %> ›
+    <span class="text-gray-700">Case</span>
+  </div>
+
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900"><%= @case.description.truncate(80) %></h1>
+      <div class="flex items-center space-x-3 mt-2">
+        <%= render partial: "shared/status_badge", locals: { status: @case.status } %>
+        <span class="text-sm text-gray-400">Created <%= time_ago_in_words(@case.created_at) %> ago</span>
+      </div>
+    </div>
+    <div class="flex items-center space-x-3">
+      <%= link_to "Edit", edit_patient_case_path(@patient, @case), class: "text-indigo-600 hover:text-indigo-800 text-sm font-medium" %>
+      <% if @case.stl_file.attached? %>
+        <%= button_to "Execute Workflow", execute_workflow_patient_case_path(@patient, @case),
+            method: :post,
+            class: "bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700",
+            data: { turbo_confirm: "Run Blender pipeline on this STL?" } %>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- STL Info -->
+  <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+    <h2 class="text-sm font-medium text-gray-500 mb-2">STL File</h2>
+    <% if @case.stl_file.attached? %>
+      <div class="flex items-center space-x-3">
+        <span class="text-gray-900 font-medium"><%= @case.stl_file.filename %></span>
+        <span class="text-sm text-gray-400"><%= number_to_human_size(@case.stl_file.byte_size) %></span>
+      </div>
+    <% else %>
+      <p class="text-gray-400">No STL file uploaded. <%= link_to "Upload one", edit_patient_case_path(@patient, @case), class: "text-indigo-600 hover:text-indigo-800" %>.</p>
+    <% end %>
+  </div>
+
+  <!-- Workflow Runs -->
+  <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+    <div class="px-6 py-4 border-b border-gray-200">
+      <h2 class="text-lg font-semibold text-gray-900">Workflow Runs</h2>
+    </div>
+    <% if @workflow_runs.any? %>
+      <div class="divide-y divide-gray-100">
+        <% @workflow_runs.each do |run| %>
+          <%= link_to patient_case_workflow_run_path(@patient, @case, run), class: "block px-6 py-4 hover:bg-gray-50 transition" do %>
+            <div class="flex items-center justify-between">
+              <div class="flex items-center space-x-3">
+                <%= render partial: "shared/status_badge", locals: { status: run.status } %>
+                <span class="text-sm text-gray-600">Run #<%= run.id %></span>
+                <% if run.duration %>
+                  <span class="text-xs text-gray-400">(<%= "%.1f" % run.duration %>s)</span>
+                <% end %>
+              </div>
+              <div class="flex items-center space-x-3">
+                <% if run.render_output.attached? %>
+                  <span class="text-xs text-green-600">📸 Render available</span>
+                <% end %>
+                <span class="text-xs text-gray-400"><%= time_ago_in_words(run.created_at) %> ago</span>
+              </div>
+            </div>
+          <% end %>
+        <% end %>
+      </div>
+    <% else %>
+      <div class="px-6 py-12 text-center text-gray-400">No runs yet. Execute the workflow to generate a render.</div>
+    <% end %>
+  </div>
+</div>

@@ -1,0 +1,45 @@
+default: &default
+  adapter: postgresql
+  encoding: unicode
+  port: 5432
+  user: postgres
+  password: xojzU7-kupcyb-syrguk
+
+development:
+  <<: *default
+  user: xavi
+  password: rpipass
+  database: iappliances_alpha_development
+  host: 192.168.0.238
+  pool: 5
+
+test:
+  <<: *default
+  database: iappliances_alpha_staging
+  host: 10.0.0.2
+  port: 6432
+  pool: <%= ENV.fetch("DB_POOL", 35) %>
+
+production:
+  primary: &primary_production
+    <<: *default
+    database: iappliances_alpha_production
+    host: 10.0.0.2
+    port: 6432
+    pool: <%= ENV.fetch("DB_POOL", 35) %>
+    checkout_timeout: 5
+    # PgBouncer in transaction mode doesn't support prepared statements
+    prepared_statements: false
+    advisory_locks: false
+  cache:
+    <<: *primary_production
+    database: iappliances_alpha_production_cache
+    migrations_paths: db/cache_migrate
+  queue:
+    <<: *primary_production
+    database: iappliances_alpha_production_queue
+    migrations_paths: db/queue_migrate
+  cable:
+    <<: *primary_production
+    database: iappliances_alpha_production_cable
+    migrations_paths: db/cable_migrate

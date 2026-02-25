@@ -1,0 +1,65 @@
+# Name of your application. Used to uniquely configure containers.
+service: iappliances-alpha
+
+# Name of the container image.
+image: xvrdmng/iappliances-alpha
+
+# Deploy to these servers.
+servers:
+  web:
+    - 178.156.151.115
+
+# Enable SSL auto certification via Let's Encrypt.
+proxy:
+  ssl: true
+  host: iappliances.toolazy.to
+  app_port: 3000
+
+# Credentials for your image host.
+registry:
+  username: xvrdmng
+  password:
+    - KAMAL_REGISTRY_PASSWORD
+
+# Configure builder setup.
+builder:
+  arch: amd64
+  args:
+    RUBY_VERSION: <%= File.read('.ruby-version').strip %>
+
+# Inject ENV variables into containers (secrets come from .kamal/secrets).
+env:
+  clear:
+    RAILS_ENV: production
+    SOLID_QUEUE_IN_PUMA: true
+    DB_HOST: 10.0.0.2
+    DB_PORT: "6432"
+    DB_NAME: iappliances_alpha_production
+    DB_POOL: "25"
+    REDIS_URL: redis://iappliances-alpha-redis:6379/0
+    WEB_CONCURRENCY: "4"
+    RAILS_MAX_THREADS: "5"
+    MALLOC_ARENA_MAX: "2"
+  secret:
+    - RAILS_MASTER_KEY
+    - DB_PASSWORD
+
+# Aliases are triggered with "bin/kamal <alias>".
+aliases:
+  console: app exec --interactive --reuse "bin/rails console"
+  shell: app exec --interactive --reuse "bash"
+  logs: app logs -f
+
+# Use a persistent storage volume
+volumes:
+  - "iappliances-alpha-storage:/rails/storage"
+
+# Bridge fingerprinted assets between versions
+asset_path: /rails/public/assets
+
+accessories:
+  redis:
+    image: redis:7-alpine
+    host: 178.156.151.115
+    directories:
+      - data:/data

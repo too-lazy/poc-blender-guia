@@ -1,0 +1,44 @@
+<div class="space-y-6">
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900"><%= @patient.name %></h1>
+      <p class="text-sm text-gray-500 mt-1"><%= @patient.email %></p>
+    </div>
+    <div class="flex items-center space-x-3">
+      <%= link_to "Edit", edit_patient_path(@patient), class: "text-indigo-600 hover:text-indigo-800 text-sm font-medium" %>
+      <%= link_to "New Case", new_patient_case_path(@patient), class: "bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700" %>
+    </div>
+  </div>
+
+  <% if @patient.notes.present? %>
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      <div class="text-sm font-medium text-gray-500 mb-1">Notes</div>
+      <p class="text-gray-700"><%= @patient.notes %></p>
+    </div>
+  <% end %>
+
+  <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+    <div class="px-6 py-4 border-b border-gray-200">
+      <h2 class="text-lg font-semibold text-gray-900">Cases</h2>
+    </div>
+    <% if @cases.any? %>
+      <div class="divide-y divide-gray-100">
+        <% @cases.each do |c| %>
+          <%= link_to patient_case_path(@patient, c), class: "block px-6 py-4 hover:bg-gray-50 transition" do %>
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="font-medium text-gray-900"><%= c.description.truncate(80) %></div>
+                <div class="text-xs text-gray-400 mt-1">
+                  <%= c.stl_file.attached? ? "STL uploaded" : "No STL file" %> · <%= c.workflow_runs.count %> runs
+                </div>
+              </div>
+              <%= render partial: "shared/status_badge", locals: { status: c.status } %>
+            </div>
+          <% end %>
+        <% end %>
+      </div>
+    <% else %>
+      <div class="px-6 py-12 text-center text-gray-400">No cases yet.</div>
+    <% end %>
+  </div>
+</div>

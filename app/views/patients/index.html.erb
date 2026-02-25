@@ -1,0 +1,26 @@
+<div class="space-y-6">
+  <div class="flex items-center justify-between">
+    <h1 class="text-2xl font-bold text-gray-900">Patients</h1>
+    <%= link_to "New Patient", new_patient_path, class: "bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700" %>
+  </div>
+
+  <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+    <% if @patients.any? %>
+      <div class="divide-y divide-gray-100">
+        <% @patients.each do |patient| %>
+          <%= link_to patient_path(patient), class: "block px-6 py-4 hover:bg-gray-50 transition" do %>
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="font-medium text-gray-900"><%= patient.name %></div>
+                <div class="text-sm text-gray-500"><%= patient.email %></div>
+              </div>
+              <div class="text-sm text-gray-400"><%= patient.cases.count %> cases</div>
+            </div>
+          <% end %>
+        <% end %>
+      </div>
+    <% else %>
+      <div class="px-6 py-12 text-center text-gray-400">No patients yet.</div>
+    <% end %>
+  </div>
+</div>
