@@ -22,7 +22,7 @@ class QuickProcessesController < ApplicationController
   end
 
   def show
-    @recent_runs = WorkflowRun.includes(:case)
+    @recent_runs = WorkflowRun.includes(:case, render_output_attachment: :blob)
                                .joins(:case)
                                .where(cases: { patient_id: nil })
                                .order(created_at: :desc)
