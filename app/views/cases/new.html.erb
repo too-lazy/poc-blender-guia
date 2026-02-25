@@ -1,4 +1,6 @@
 <div class="max-w-2xl">
-  <h1 class="text-3xl font-black text-gray-900 mb-6">New Case for <%= @patient.name %></h1>
-  <%= render "form", dental_case: @case, patient: @patient %>
+  <h1 class="text-2xl font-bold text-slate-900 mb-6">Nuevo Caso — <%= @patient.name %></h1>
+  <div class="bg-white border border-sky-100 rounded-xl shadow-sm p-8">
+    <%= render "form", dental_case: @case, patient: @patient %>
+  </div>
 </div>
