@@ -25,6 +25,17 @@
         <% end %>
       </div>
     </div>
+    <!-- Downloads -->
+    <div class="flex items-center gap-3">
+      <% if @run.render_output.attached? %>
+        <%= link_to "⬇ PNG Render", rails_blob_path(@run.render_output, disposition: "attachment"),
+            class: "brutalist-btn brutalist-btn-accent" %>
+      <% end %>
+      <% if @case.stl_file.attached? %>
+        <%= link_to "⬇ STL File", rails_blob_path(@case.stl_file, disposition: "attachment"),
+            class: "brutalist-btn brutalist-btn-ghost" %>
+      <% end %>
+    </div>
   </div>
 
   <!-- Timestamps -->
@@ -43,10 +54,27 @@
     </div>
   </div>
 
+  <!-- 3D STL Viewer -->
+  <% if @case.stl_file.attached? %>
+    <div class="brutalist-card" data-controller="stl-viewer" data-stl-viewer-url-value="<%= url_for(@case.stl_file) %>">
+      <div class="px-6 py-4 border-b-2 border-black flex items-center justify-between">
+        <h2 class="text-lg font-black text-gray-900">🦷 3D Model Viewer</h2>
+        <div class="flex items-center gap-2">
+          <button data-action="click->stl-viewer#toggleWireframe" class="brutalist-btn brutalist-btn-ghost !py-1.5 !px-3 !text-xs">Wireframe</button>
+          <button data-action="click->stl-viewer#resetView" class="brutalist-btn brutalist-btn-ghost !py-1.5 !px-3 !text-xs">Reset View</button>
+        </div>
+      </div>
+      <div data-stl-viewer-target="container" style="width:100%;height:500px;"></div>
+      <div class="px-6 py-3 border-t-2 border-black bg-cream">
+        <p class="text-xs font-bold text-gray-500">🖱 Drag to rotate · Scroll to zoom · Right-click to pan</p>
+      </div>
+    </div>
+  <% end %>
+
   <!-- Render Output -->
   <% if @run.render_output.attached? %>
     <div class="brutalist-card p-6" data-controller="lightbox">
-      <h2 class="text-lg font-black text-gray-900 mb-4">Render Output</h2>
+      <h2 class="text-lg font-black text-gray-900 mb-4">Blender Render</h2>
       <div class="bg-cream border-2 border-black p-4 flex justify-center cursor-pointer hover:border-brand transition-colors"
            data-action="click->lightbox#open"
            data-lightbox-src-value="<%= url_for(@run.render_output) %>">
