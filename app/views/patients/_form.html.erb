@@ -1,6 +1,6 @@
 <%= form_with(model: patient, class: "space-y-5") do |f| %>
   <% if patient.errors.any? %>
-    <div class="bg-red-100 border-2 border-black text-red-900 px-4 py-3 font-bold text-sm shadow-brutal-sm">
+    <div class="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg text-sm font-medium">
       <% patient.errors.full_messages.each do |msg| %>
         <p><%= msg %></p>
       <% end %>
@@ -8,22 +8,26 @@
   <% end %>
 
   <div>
-    <%= f.label :name, class: "block text-sm font-bold text-gray-700 mb-2" %>
-    <%= f.text_field :name, class: "brutalist-input w-full", required: true %>
+    <%= f.label :name, "Nombre", class: "block text-sm font-medium text-slate-700 mb-2" %>
+    <%= f.text_field :name, required: true,
+        class: "w-full px-4 py-2.5 rounded-lg border border-sky-200 focus:outline-none focus:ring-2 focus:ring-sky-100 focus:border-sky-400 text-sm transition-all bg-white placeholder:text-slate-400" %>
   </div>
 
   <div>
-    <%= f.label :email, class: "block text-sm font-bold text-gray-700 mb-2" %>
-    <%= f.email_field :email, class: "brutalist-input w-full" %>
+    <%= f.label :email, "Email", class: "block text-sm font-medium text-slate-700 mb-2" %>
+    <%= f.email_field :email,
+        class: "w-full px-4 py-2.5 rounded-lg border border-sky-200 focus:outline-none focus:ring-2 focus:ring-sky-100 focus:border-sky-400 text-sm transition-all bg-white placeholder:text-slate-400" %>
   </div>
 
   <div>
-    <%= f.label :notes, class: "block text-sm font-bold text-gray-700 mb-2" %>
-    <%= f.text_area :notes, rows: 3, class: "brutalist-input w-full" %>
+    <%= f.label :notes, "Notas", class: "block text-sm font-medium text-slate-700 mb-2" %>
+    <%= f.text_area :notes, rows: 3,
+        class: "w-full px-4 py-2.5 rounded-lg border border-sky-200 focus:outline-none focus:ring-2 focus:ring-sky-100 focus:border-sky-400 text-sm transition-all bg-white placeholder:text-slate-400" %>
   </div>
 
   <div class="flex items-center gap-3 pt-2">
-    <%= f.submit class: "brutalist-btn brutalist-btn-primary cursor-pointer" %>
-    <%= link_to "Cancel", patients_path, class: "brutalist-btn brutalist-btn-ghost" %>
+    <%= f.submit class: "bg-sky-500 hover:bg-sky-600 text-white px-6 py-2.5 rounded-lg text-sm font-medium shadow-sm transition-all cursor-pointer" %>
+    <%= link_to "Cancelar", patients_path,
+        class: "bg-white hover:bg-sky-50 text-slate-700 px-6 py-2.5 rounded-lg text-sm font-medium border border-sky-200 transition-all" %>
   </div>
 <% end %>

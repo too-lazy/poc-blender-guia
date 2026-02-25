@@ -1,54 +1,181 @@
 <div class="space-y-8">
-  <div class="flex items-center justify-between">
-    <h1 class="text-3xl font-black text-gray-900">Dashboard</h1>
-    <div class="flex gap-3">
-      <%= link_to "🚀 Quick Process", new_quick_process_path, class: "brutalist-btn brutalist-btn-accent" %>
-      <%= link_to "+ New Patient", new_patient_path, class: "brutalist-btn brutalist-btn-primary" %>
-    </div>
+  <div>
+    <h1 class="text-2xl font-bold text-slate-900">Dashboard</h1>
+    <p class="text-slate-500">Pipeline de guías dentales 3D para ortodoncia.</p>
   </div>
 
   <!-- Stats -->
   <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-    <div class="brutalist-card p-6">
-      <div class="text-xs font-black uppercase tracking-wider text-gray-500">Patients</div>
-      <div class="text-4xl font-black text-gray-900 mt-2"><%= Patient.count %></div>
+    <!-- Patients -->
+    <div class="bg-white p-6 rounded-xl border border-sky-100 shadow-sm hover:shadow-md transition-shadow">
+      <div class="flex justify-between items-start">
+        <div>
+          <p class="text-sm text-slate-500 font-medium">Pacientes</p>
+          <h3 class="text-3xl font-bold text-slate-900 mt-2"><%= Patient.count %></h3>
+        </div>
+        <div class="p-3 rounded-lg bg-sky-50 text-sky-600">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+          </svg>
+        </div>
+      </div>
     </div>
-    <div class="brutalist-card p-6">
-      <div class="text-xs font-black uppercase tracking-wider text-gray-500">Cases</div>
-      <div class="text-4xl font-black text-gray-900 mt-2"><%= Case.count %></div>
+
+    <!-- Cases -->
+    <div class="bg-white p-6 rounded-xl border border-sky-100 shadow-sm hover:shadow-md transition-shadow">
+      <div class="flex justify-between items-start">
+        <div>
+          <p class="text-sm text-slate-500 font-medium">Casos Activos</p>
+          <h3 class="text-3xl font-bold text-slate-900 mt-2"><%= Case.count %></h3>
+        </div>
+        <div class="p-3 rounded-lg bg-sky-100 text-sky-700">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+          </svg>
+        </div>
+      </div>
     </div>
-    <div class="brutalist-card p-6">
-      <div class="text-xs font-black uppercase tracking-wider text-gray-500">Workflow Runs</div>
-      <div class="text-4xl font-black text-gray-900 mt-2"><%= WorkflowRun.count %></div>
+
+    <!-- Workflow Runs -->
+    <div class="bg-white p-6 rounded-xl border border-sky-100 shadow-sm hover:shadow-md transition-shadow">
+      <div class="flex justify-between items-start">
+        <div>
+          <p class="text-sm text-slate-500 font-medium">Workflow Runs</p>
+          <h3 class="text-3xl font-bold text-slate-900 mt-2"><%= WorkflowRun.count %></h3>
+        </div>
+        <div class="p-3 rounded-lg bg-sky-50 text-sky-500">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+          </svg>
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- Recent Runs -->
-  <div class="brutalist-card">
-    <div class="px-6 py-4 border-b-2 border-black">
-      <h2 class="text-lg font-black text-gray-900">Recent Workflow Runs</h2>
-    </div>
-    <% if @recent_runs.any? %>
-      <div class="divide-y-2 divide-gray-200">
-        <% @recent_runs.each do |run| %>
-          <%= link_to workflow_run_path(run), class: "block px-6 py-4 flex items-center justify-between hover:bg-cream transition-colors" do %>
-            <div>
-              <div class="font-bold text-gray-900"><%= run.case.patient&.name || "Quick process" %></div>
-              <div class="text-sm text-gray-500"><%= run.case.description.truncate(60) %></div>
-            </div>
-            <div class="flex items-center gap-3">
-              <%= render partial: "shared/status_badge", locals: { status: run.status } %>
-              <span class="text-xs font-medium text-gray-400"><%= time_ago_in_words(run.created_at) %> ago</span>
-              <span class="text-xs font-bold text-brand">→</span>
-            </div>
-          <% end %>
+  <!-- Main grid -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <!-- Recent Runs -->
+    <div class="lg:col-span-2">
+      <div class="bg-white border border-sky-100 rounded-xl shadow-sm overflow-hidden">
+        <div class="px-6 py-4 border-b border-sky-50 flex justify-between items-center">
+          <h3 class="text-slate-900 font-semibold">Ejecuciones Recientes</h3>
+          <%= link_to "Ver todo", status_path, class: "text-sm text-sky-500 hover:text-sky-600 font-medium" %>
+        </div>
+        <% if @recent_runs.any? %>
+          <div class="divide-y divide-sky-50">
+            <% @recent_runs.each do |run| %>
+              <%= link_to workflow_run_path(run), class: "block px-6 py-4 flex items-center justify-between hover:bg-sky-50/30 transition-colors" do %>
+                <div class="flex items-center gap-4">
+                  <div class="w-2.5 h-2.5 rounded-full shrink-0 <%= run.status == 'completed' ? 'bg-sky-500' : run.status.in?(['running','processing','pending']) ? 'bg-amber-500 animate-pulse' : 'bg-red-500' %>"></div>
+                  <div>
+                    <p class="text-sm text-slate-900 font-medium"><%= run.case.patient&.name || "Quick process" %></p>
+                    <p class="text-xs text-slate-500"><%= run.case.description&.truncate(50) %></p>
+                  </div>
+                </div>
+                <div class="flex items-center gap-6">
+                  <% if run.status == 'completed' %>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs bg-sky-100 text-sky-800 font-medium">Completado</span>
+                  <% elsif run.status.in?(['running','processing','pending']) %>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs bg-amber-100 text-amber-800 font-medium">Procesando</span>
+                  <% else %>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs bg-red-100 text-red-800 font-medium">Error</span>
+                  <% end %>
+                  <span class="text-slate-400 text-xs w-28 text-right"><%= time_ago_in_words(run.created_at) %> ago</span>
+                </div>
+              <% end %>
+            <% end %>
+          </div>
+        <% else %>
+          <div class="px-6 py-16 text-center">
+            <p class="text-slate-400 font-medium">No hay ejecuciones aún.</p>
+            <p class="text-slate-400 text-sm mt-2">Usa Quick Process para comenzar.</p>
+          </div>
         <% end %>
       </div>
-    <% else %>
-      <div class="px-6 py-16 text-center">
-        <p class="text-gray-400 text-lg font-bold">No workflow runs yet.</p>
-        <p class="text-gray-400 text-sm mt-2">Create a patient and case, or use Quick Process to get started.</p>
+    </div>
+
+    <!-- Right column -->
+    <div class="space-y-6">
+      <!-- Quick Process CTA -->
+      <div class="bg-gradient-to-br from-sky-500 to-sky-600 rounded-xl p-6 text-white shadow-lg relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-12 translate-x-12"></div>
+        <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-8 -translate-x-8"></div>
+        <div class="relative">
+          <div class="flex items-center gap-2 mb-3">
+            <svg class="w-5 h-5 text-sky-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+            </svg>
+            <h3 class="text-xl font-bold">Quick Process</h3>
+          </div>
+          <p class="text-sky-100 text-sm mb-6">Inicia un nuevo workflow de impresión 3D para guías ortodónticas.</p>
+          <%= link_to new_quick_process_path,
+              class: "w-full bg-white text-sky-600 hover:bg-sky-50 py-2.5 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors font-semibold text-sm" do %>
+            Iniciar Workflow
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+            </svg>
+          <% end %>
+        </div>
       </div>
-    <% end %>
+
+      <!-- Pipeline Steps -->
+      <div class="bg-white border border-sky-100 rounded-xl p-6 shadow-sm">
+        <h3 class="text-slate-900 font-semibold mb-4">Pipeline Dental</h3>
+        <div class="space-y-1">
+          <% [
+            { icon: :scan, title: "1. Radiografía + Modelo", desc: "Carga de radiografía y escaneo 3D de la boca" },
+            { icon: :box, title: "2. Render en Blender", desc: "Renderizado automático del modelo 3D" },
+            { icon: :activity, title: "3. Vista Oclusal", desc: "Generación automática de vista oclusal" },
+            { icon: :crosshair, title: "4. Guía de Tornillos", desc: "Guía 3D para posicionamiento de tornillos de anclaje" }
+          ].each do |step| %>
+            <div class="flex items-start gap-3 p-3 rounded-lg hover:bg-sky-50/50 transition-colors">
+              <div class="p-2 bg-sky-50 text-sky-600 rounded-lg shrink-0">
+                <% if step[:icon] == :scan %>
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4"/></svg>
+                <% elsif step[:icon] == :box %>
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10"/></svg>
+                <% elsif step[:icon] == :activity %>
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                <% else %>
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8H3m4 0V6m0 0h12m0 0v2m0-2h2"/></svg>
+                <% end %>
+              </div>
+              <div>
+                <p class="text-sm text-slate-800 font-medium"><%= step[:title] %></p>
+                <p class="text-xs text-slate-500 mt-0.5"><%= step[:desc] %></p>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <!-- System Status -->
+      <div class="bg-white border border-sky-100 rounded-xl p-6 shadow-sm">
+        <h3 class="text-slate-900 font-semibold mb-4">Estado del Sistema</h3>
+        <div class="space-y-4">
+          <div class="flex items-center justify-between text-sm">
+            <span class="flex items-center gap-2 text-slate-600">
+              <svg class="w-4 h-4 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              Blender Engine
+            </span>
+            <span class="text-sky-600 font-medium">Operativo</span>
+          </div>
+          <div class="flex items-center justify-between text-sm">
+            <span class="flex items-center gap-2 text-slate-600">
+              <svg class="w-4 h-4 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              Almacenamiento
+            </span>
+            <span class="text-sky-600 font-medium">Saludable</span>
+          </div>
+          <div class="flex items-center justify-between text-sm">
+            <span class="flex items-center gap-2 text-slate-600">
+              <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+              Modelo AI
+            </span>
+            <span class="text-amber-600 font-medium">Actualizando...</span>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>

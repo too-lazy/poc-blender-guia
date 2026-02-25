@@ -1,6 +1,6 @@
 <%= form_with(model: [patient, dental_case], class: "space-y-5") do |f| %>
   <% if dental_case.errors.any? %>
-    <div class="bg-red-100 border-2 border-black text-red-900 px-4 py-3 font-bold text-sm shadow-brutal-sm">
+    <div class="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg text-sm font-medium">
       <% dental_case.errors.full_messages.each do |msg| %>
         <p><%= msg %></p>
       <% end %>
@@ -8,23 +8,25 @@
   <% end %>
 
   <div>
-    <%= f.label :description, class: "block text-sm font-bold text-gray-700 mb-2" %>
-    <%= f.text_area :description, rows: 3, class: "brutalist-input w-full", required: true %>
+    <%= f.label :description, "Descripción", class: "block text-sm font-medium text-slate-700 mb-2" %>
+    <%= f.text_area :description, rows: 3, required: true,
+        class: "w-full px-4 py-2.5 rounded-lg border border-sky-200 focus:outline-none focus:ring-2 focus:ring-sky-100 focus:border-sky-400 text-sm transition-all bg-white placeholder:text-slate-400" %>
   </div>
 
   <div>
-    <%= f.label :stl_file, "STL File", class: "block text-sm font-bold text-gray-700 mb-2" %>
-    <div class="brutalist-card !border-dashed !border-2 p-6 text-center bg-cream">
+    <%= f.label :stl_file, "Archivo STL", class: "block text-sm font-medium text-slate-700 mb-2" %>
+    <div class="border-2 border-dashed border-sky-200 rounded-xl p-6 text-center bg-sky-50/20">
       <%= f.file_field :stl_file, accept: ".stl",
-          class: "block w-full text-sm text-gray-600 file:mr-4 file:py-3 file:px-6 file:border-2 file:border-black file:text-sm file:font-bold file:bg-accent file:text-black file:shadow-brutal-sm hover:file:bg-accent-hover file:cursor-pointer file:transition-colors" %>
+          class: "block w-full text-sm text-slate-600 file:mr-4 file:py-2.5 file:px-6 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-sky-500 file:text-white hover:file:bg-sky-600 file:cursor-pointer file:transition-colors" %>
     </div>
     <% if dental_case.stl_file.attached? %>
-      <p class="text-xs font-bold text-green-700 mt-2">✓ <%= dental_case.stl_file.filename %> (<%= number_to_human_size(dental_case.stl_file.byte_size) %>)</p>
+      <p class="text-xs font-medium text-sky-700 mt-2">✓ <%= dental_case.stl_file.filename %> (<%= number_to_human_size(dental_case.stl_file.byte_size) %>)</p>
     <% end %>
   </div>
 
   <div class="flex items-center gap-3 pt-2">
-    <%= f.submit class: "brutalist-btn brutalist-btn-primary cursor-pointer" %>
-    <%= link_to "Cancel", patient_path(patient), class: "brutalist-btn brutalist-btn-ghost" %>
+    <%= f.submit class: "bg-sky-500 hover:bg-sky-600 text-white px-6 py-2.5 rounded-lg text-sm font-medium shadow-sm transition-all cursor-pointer" %>
+    <%= link_to "Cancelar", patient_path(patient),
+        class: "bg-white hover:bg-sky-50 text-slate-700 px-6 py-2.5 rounded-lg text-sm font-medium border border-sky-200 transition-all" %>
   </div>
 <% end %>

@@ -5,25 +5,25 @@
 <div class="space-y-6">
   <div class="flex items-center justify-between">
     <div>
-      <h1 class="text-3xl font-black text-gray-900">Workflow Status</h1>
-      <p class="text-sm text-gray-500 font-medium mt-1">Live view of all pipeline runs</p>
+      <h1 class="text-2xl font-bold text-slate-900">Actividad</h1>
+      <p class="text-sm text-slate-500 mt-1">Vista en tiempo real de todos los workflows</p>
     </div>
     <div class="flex items-center gap-2">
-      <span class="inline-block w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-      <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Auto-refreshing</span>
+      <span class="inline-block w-2 h-2 bg-sky-500 rounded-full animate-pulse"></span>
+      <span class="text-xs font-medium text-slate-500 uppercase tracking-wider">Auto-actualizando</span>
     </div>
   </div>
 
   <!-- Filter tabs -->
   <div class="flex gap-2">
     <% [
-      ["all", "All", @counts[:all]],
-      ["running", "Running", @counts[:running]],
-      ["completed", "Completed", @counts[:completed]],
-      ["failed", "Failed", @counts[:failed]]
+      ["all", "Todos", @counts[:all]],
+      ["running", "En curso", @counts[:running]],
+      ["completed", "Completados", @counts[:completed]],
+      ["failed", "Fallidos", @counts[:failed]]
     ].each do |key, label, count| %>
       <%= link_to status_path(filter: key),
-          class: "brutalist-btn #{@filter == key ? 'brutalist-btn-primary' : 'brutalist-btn-ghost'} !py-2 !px-4 !text-xs" do %>
+          class: "px-4 py-2 rounded-lg text-xs font-medium transition-all #{@filter == key ? 'bg-sky-500 text-white shadow-sm' : 'bg-white text-slate-600 border border-sky-200 hover:bg-sky-50'}" do %>
         <%= label %> <span class="ml-1 opacity-70">(<%= count %>)</span>
       <% end %>
     <% end %>
@@ -33,14 +33,13 @@
   <div class="space-y-4">
     <% if @runs.any? %>
       <% @runs.each do |run| %>
-        <div class="brutalist-card" id="run-<%= run.id %>">
-          <!-- Header -->
-          <%= link_to workflow_run_path(run), class: "block px-6 py-4 border-b-2 border-black flex items-center justify-between bg-white hover:bg-cream transition-colors" do %>
+        <div class="bg-white border border-sky-100 rounded-xl shadow-sm overflow-hidden" id="run-<%= run.id %>">
+          <%= link_to workflow_run_path(run), class: "block px-6 py-4 border-b border-sky-50 flex items-center justify-between hover:bg-sky-50/30 transition-colors" do %>
             <div class="flex items-center gap-4">
               <%= render partial: "shared/status_badge", locals: { status: run.status } %>
               <div>
-                <span class="font-black text-gray-900">Run #<%= run.id %></span>
-                <span class="text-sm text-gray-500 ml-2">
+                <span class="font-semibold text-slate-900">Run #<%= run.id %></span>
+                <span class="text-sm text-slate-500 ml-2">
                   <% if run.case.patient %>
                     <%= run.case.patient.name %> ·
                   <% end %>
@@ -50,35 +49,34 @@
             </div>
             <div class="flex items-center gap-4">
               <% if run.duration %>
-                <span class="text-xs font-bold text-gray-500"><%= "%.1f" % run.duration %>s</span>
+                <span class="text-xs font-medium text-slate-500"><%= "%.1f" % run.duration %>s</span>
               <% end %>
-              <span class="text-xs text-gray-400 font-medium"><%= time_ago_in_words(run.created_at) %> ago</span>
-              <span class="text-xs font-bold text-brand">View details →</span>
+              <span class="text-xs text-slate-400 font-medium"><%= time_ago_in_words(run.created_at) %> ago</span>
+              <span class="text-xs font-medium text-sky-500">Ver detalles →</span>
             </div>
           <% end %>
-          </div>
 
           <div class="grid grid-cols-1 <%= run.render_output.attached? ? 'lg:grid-cols-3' : '' %>">
             <!-- Log output -->
             <div class="<%= run.render_output.attached? ? 'lg:col-span-2' : '' %> p-4">
-              <div class="text-xs font-black uppercase tracking-wider text-gray-500 mb-2">
+              <div class="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">
                 <% if run.status.in?(%w[pending running]) %>
-                  <span class="inline-block w-2 h-2 bg-blue-500 rounded-full animate-pulse mr-1"></span>
+                  <span class="inline-block w-2 h-2 bg-amber-500 rounded-full animate-pulse mr-1"></span>
                 <% end %>
                 Log Output
               </div>
               <% if run.log_output.present? %>
-                <pre class="text-xs text-gray-600 whitespace-pre-wrap bg-cream border-2 border-gray-200 p-3 max-h-48 overflow-y-auto font-mono"><%= run.log_output %></pre>
+                <pre class="text-xs text-slate-600 whitespace-pre-wrap bg-slate-50 border border-slate-200 rounded-lg p-3 max-h-48 overflow-y-auto font-mono"><%= run.log_output %></pre>
               <% elsif run.error_message.present? %>
-                <pre class="text-xs text-red-700 whitespace-pre-wrap bg-red-50 border-2 border-red-300 p-3 max-h-48 overflow-y-auto font-mono"><%= run.error_message %></pre>
+                <pre class="text-xs text-red-700 whitespace-pre-wrap bg-red-50 border border-red-200 rounded-lg p-3 max-h-48 overflow-y-auto font-mono"><%= run.error_message %></pre>
               <% else %>
-                <div class="text-sm text-gray-400 italic bg-cream border-2 border-gray-200 p-3">
+                <div class="text-sm text-slate-400 italic bg-slate-50 border border-slate-200 rounded-lg p-3">
                   <% if run.status == "pending" %>
-                    Waiting to start…
+                    Esperando para iniciar…
                   <% elsif run.status == "running" %>
-                    Processing… logs will appear here.
+                    Procesando… los logs aparecerán aquí.
                   <% else %>
-                    No log output.
+                    Sin log output.
                   <% end %>
                 </div>
               <% end %>
@@ -86,19 +84,19 @@
 
             <!-- Render preview -->
             <% if run.render_output.attached? %>
-              <div class="p-4 border-l-2 border-black" data-controller="lightbox">
-                <div class="text-xs font-black uppercase tracking-wider text-gray-500 mb-2">Render Output</div>
-                <div class="bg-cream border-2 border-gray-200 p-2 cursor-pointer hover:border-brand transition-colors"
+              <div class="p-4 border-l border-sky-50" data-controller="lightbox">
+                <div class="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">Render Output</div>
+                <div class="bg-sky-50/30 border border-sky-100 rounded-lg p-2 cursor-pointer hover:border-sky-300 transition-colors"
                      data-action="click->lightbox#open"
                      data-lightbox-src-value="<%= url_for(run.render_output) %>">
                   <%= image_tag url_for(run.render_output),
-                      class: "w-full h-auto",
+                      class: "w-full h-auto rounded",
                       alt: "Blender render output" %>
                 </div>
-                <div class="mt-2 flex gap-2">
-                  <span class="text-xs font-bold text-teal-700">📸 Click to expand</span>
+                <div class="mt-2 flex items-center gap-2">
+                  <span class="text-xs text-slate-400">Click para expandir</span>
                   <%= link_to "⬇", rails_blob_path(run.render_output, disposition: "attachment"),
-                      class: "text-xs font-bold text-brand hover:underline" %>
+                      class: "text-xs font-medium text-sky-500 hover:underline" %>
                 </div>
               </div>
             <% end %>
@@ -106,15 +104,15 @@
         </div>
       <% end %>
     <% else %>
-      <div class="brutalist-card p-16 text-center">
-        <p class="text-gray-400 text-lg font-bold">
+      <div class="bg-white border border-sky-100 rounded-xl shadow-sm p-16 text-center">
+        <p class="text-slate-400 font-medium">
           <% if @filter == "all" %>
-            No workflow runs yet.
+            No hay workflow runs aún.
           <% else %>
-            No <%= @filter %> runs found.
+            No se encontraron runs con estado "<%= @filter %>".
           <% end %>
         </p>
-        <p class="text-gray-400 text-sm mt-2">Runs will appear here when you execute a workflow.</p>
+        <p class="text-slate-400 text-sm mt-2">Los runs aparecerán aquí cuando ejecutes un workflow.</p>
       </div>
     <% end %>
   </div>

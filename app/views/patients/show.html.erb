@@ -1,35 +1,37 @@
 <div class="space-y-6">
   <div class="flex items-center justify-between">
     <div>
-      <h1 class="text-3xl font-black text-gray-900"><%= @patient.name %></h1>
-      <p class="text-sm text-gray-500 mt-1 font-medium"><%= @patient.email %></p>
+      <h1 class="text-2xl font-bold text-slate-900"><%= @patient.name %></h1>
+      <p class="text-sm text-slate-500 mt-1 font-medium"><%= @patient.email %></p>
     </div>
     <div class="flex items-center gap-3">
-      <%= link_to "Edit", edit_patient_path(@patient), class: "brutalist-btn brutalist-btn-ghost" %>
-      <%= link_to "+ New Case", new_patient_case_path(@patient), class: "brutalist-btn brutalist-btn-primary" %>
+      <%= link_to "Editar", edit_patient_path(@patient),
+          class: "bg-white hover:bg-sky-50 text-slate-700 px-4 py-2 rounded-lg text-sm font-medium border border-sky-200 transition-all" %>
+      <%= link_to "+ Nuevo Caso", new_patient_case_path(@patient),
+          class: "bg-sky-500 hover:bg-sky-600 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm transition-all" %>
     </div>
   </div>
 
   <% if @patient.notes.present? %>
-    <div class="brutalist-card p-6">
-      <div class="text-xs font-black uppercase tracking-wider text-gray-500 mb-2">Notes</div>
-      <p class="text-gray-700"><%= @patient.notes %></p>
+    <div class="bg-white border border-sky-100 rounded-xl p-6 shadow-sm">
+      <div class="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">Notas</div>
+      <p class="text-slate-700"><%= @patient.notes %></p>
     </div>
   <% end %>
 
-  <div class="brutalist-card">
-    <div class="px-6 py-4 border-b-2 border-black">
-      <h2 class="text-lg font-black text-gray-900">Cases</h2>
+  <div class="bg-white border border-sky-100 rounded-xl shadow-sm overflow-hidden">
+    <div class="px-6 py-4 border-b border-sky-50">
+      <h2 class="text-slate-900 font-semibold">Casos</h2>
     </div>
     <% if @cases.any? %>
-      <div class="divide-y-2 divide-gray-200">
+      <div class="divide-y divide-sky-50">
         <% @cases.each do |c| %>
-          <%= link_to patient_case_path(@patient, c), class: "block px-6 py-4 hover:bg-cream transition-colors" do %>
+          <%= link_to patient_case_path(@patient, c), class: "block px-6 py-4 hover:bg-sky-50/30 transition-colors" do %>
             <div class="flex items-center justify-between">
               <div>
-                <div class="font-bold text-gray-900"><%= c.description.truncate(80) %></div>
-                <div class="text-xs text-gray-500 mt-1 font-medium">
-                  <%= c.stl_file.attached? ? "✓ STL uploaded" : "No STL file" %> · <%= c.workflow_runs.count %> runs
+                <div class="font-medium text-slate-900"><%= c.description.truncate(80) %></div>
+                <div class="text-xs text-slate-500 mt-1">
+                  <%= c.stl_file.attached? ? "✓ STL cargado" : "Sin archivo STL" %> · <%= c.workflow_runs.count %> ejecuciones
                 </div>
               </div>
               <%= render partial: "shared/status_badge", locals: { status: c.status } %>
@@ -39,7 +41,7 @@
       </div>
     <% else %>
       <div class="px-6 py-16 text-center">
-        <p class="text-gray-400 text-lg font-bold">No cases yet.</p>
+        <p class="text-slate-400 font-medium">Sin casos aún.</p>
       </div>
     <% end %>
   </div>

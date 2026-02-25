@@ -1,43 +1,39 @@
 @import "tailwindcss";
 
 @theme {
-  --color-cream: #FFFBF5;
-  --color-accent: #14B8A6;
-  --color-accent-hover: #0D9488;
-  --color-brand: #6366F1;
-  --color-brand-light: #EEF2FF;
-  --color-brutal-shadow: #000000;
-  --shadow-brutal: 4px 4px 0px 0px var(--color-brutal-shadow);
-  --shadow-brutal-sm: 3px 3px 0px 0px var(--color-brutal-shadow);
-  --shadow-brutal-lg: 6px 6px 0px 0px var(--color-brutal-shadow);
+  --color-background: #F8FFFE;
+  --color-cream: #F8FFFE;
+  --color-accent: #0EA5E9;
+  --color-accent-hover: #0284C7;
+  --color-brand: #0EA5E9;
+  --color-brand-light: #F0F9FF;
 }
 
-/* Neobrutalism base components */
 @layer components {
+  /* Card */
   .brutalist-card {
-    @apply bg-white border-2 border-black shadow-brutal;
+    @apply bg-white border border-sky-100 rounded-xl shadow-sm;
   }
 
+  /* Input */
   .brutalist-input {
-    @apply border-2 border-black px-4 py-3 text-sm font-medium bg-white
-           focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2
-           placeholder:text-gray-400;
+    @apply border border-sky-200 px-4 py-2.5 text-sm bg-white rounded-lg
+           focus:outline-none focus:ring-2 focus:ring-sky-100 focus:border-sky-400
+           placeholder:text-slate-400 transition-all w-full;
   }
 
+  /* Buttons */
   .brutalist-btn {
-    @apply inline-flex items-center gap-2 px-5 py-3 border-2 border-black
-           font-bold text-sm shadow-brutal-sm
-           hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none
-           active:translate-x-[3px] active:translate-y-[3px]
-           transition-all duration-100 cursor-pointer;
+    @apply inline-flex items-center gap-2 px-4 py-2.5 rounded-lg
+           font-medium text-sm transition-all duration-150 cursor-pointer;
   }
 
   .brutalist-btn-primary {
-    @apply bg-brand text-white hover:bg-indigo-700;
+    @apply bg-sky-500 text-white hover:bg-sky-600 shadow-sm;
   }
 
   .brutalist-btn-accent {
-    @apply bg-accent text-black hover:bg-accent-hover;
+    @apply bg-sky-500 text-white hover:bg-sky-600 shadow-sm;
   }
 
   .brutalist-btn-danger {
@@ -45,10 +41,26 @@
   }
 
   .brutalist-btn-ghost {
-    @apply bg-white text-gray-800 hover:bg-gray-100;
+    @apply bg-white text-slate-700 hover:bg-sky-50 border border-sky-200;
   }
 
+  /* Badge */
   .brutalist-badge {
-    @apply inline-flex items-center px-3 py-1 border-2 border-black text-xs font-black uppercase tracking-wider;
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  /* Nav item */
+  .nav-item {
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors
+           text-slate-600 hover:bg-sky-50/50 hover:text-sky-700 font-medium;
+  }
+
+  .nav-item-active {
+    @apply bg-sky-50 text-sky-700 border border-sky-200;
+  }
+
+  /* Section label */
+  .nav-section-label {
+    @apply px-3 mb-2 text-xs text-sky-500 uppercase tracking-wider font-semibold;
   }
 }

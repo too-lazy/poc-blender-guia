@@ -1,29 +1,66 @@
 <div class="space-y-8">
   <div>
-    <h1 class="text-3xl font-black text-gray-900">Quick Process</h1>
-    <p class="text-gray-600 mt-1">Upload an STL and run the Blender pipeline — no patient needed.</p>
+    <h1 class="text-2xl font-bold text-slate-900">Quick Process</h1>
+    <p class="text-slate-500">Flujo automatizado de impresión 3D de guías ortodónticas.</p>
   </div>
 
-  <div class="brutalist-card p-8">
+  <!-- Steps indicator -->
+  <div class="flex items-center gap-2">
+    <% [
+      { icon: :scan, title: "Radiografía + Modelo" },
+      { icon: :box, title: "Render Blender" },
+      { icon: :activity, title: "Vista Oclusal" },
+      { icon: :crosshair, title: "Guía de Tornillos" }
+    ].each_with_index do |step, idx| %>
+      <div class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm <%= idx == 0 ? 'bg-sky-500 text-white shadow-sm' : 'bg-white text-slate-400 border border-sky-100' %>">
+        <% if step[:icon] == :scan %>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4"/></svg>
+        <% elsif step[:icon] == :box %>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10"/></svg>
+        <% elsif step[:icon] == :activity %>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+        <% else %>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/></svg>
+        <% end %>
+        <span class="hidden md:inline font-medium"><%= step[:title] %></span>
+      </div>
+      <% if idx < 3 %>
+        <div class="w-8 h-0.5 bg-sky-100"></div>
+      <% end %>
+    <% end %>
+  </div>
+
+  <!-- Form card -->
+  <div class="bg-white border border-sky-100 rounded-xl shadow-sm p-8">
     <%= form_with(model: Case.new, url: quick_process_path, class: "space-y-6") do |f| %>
       <div>
-        <%= f.label :description, "Description (optional)", class: "block text-sm font-bold text-gray-700 mb-2" %>
+        <%= f.label :description, "Descripción (opcional)", class: "block text-sm font-medium text-slate-700 mb-2" %>
         <%= f.text_field :description,
-            placeholder: "e.g. Test render, upper arch…",
-            class: "brutalist-input w-full" %>
+            placeholder: "ej. Test render, arco superior…",
+            class: "w-full px-4 py-2.5 rounded-lg border border-sky-200 focus:outline-none focus:ring-2 focus:ring-sky-100 focus:border-sky-400 text-sm transition-all bg-white placeholder:text-slate-400" %>
       </div>
 
       <div>
-        <%= f.label :stl_file, "STL File", class: "block text-sm font-bold text-gray-700 mb-2" %>
-        <div class="brutalist-card !border-dashed !border-2 p-8 text-center bg-cream">
+        <%= f.label :stl_file, "Archivo STL", class: "block text-sm font-medium text-slate-700 mb-2" %>
+        <div class="border-2 border-dashed border-sky-200 rounded-xl p-12 text-center hover:border-sky-400 hover:bg-sky-50/30 transition-all cursor-pointer">
+          <div class="w-16 h-16 bg-sky-50 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+            </svg>
+          </div>
+          <h3 class="text-slate-700 font-semibold mb-2">Cargar Archivo STL</h3>
+          <p class="text-sm text-slate-500 max-w-md mx-auto mb-4">
+            Arrastra y suelta el modelo 3D de la boca (.stl) aquí, o haz clic para seleccionar
+          </p>
           <%= f.file_field :stl_file, accept: ".stl",
-              class: "block w-full text-sm text-gray-600 file:mr-4 file:py-3 file:px-6 file:border-2 file:border-black file:text-sm file:font-bold file:bg-accent file:text-black file:shadow-brutal-sm hover:file:bg-accent-hover file:cursor-pointer file:transition-colors" %>
-          <p class="text-xs text-gray-500 mt-3">Upload a .stl file to process through the Blender pipeline</p>
+              class: "block w-full text-sm text-slate-600 file:mr-4 file:py-2.5 file:px-6 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-sky-500 file:text-white hover:file:bg-sky-600 file:cursor-pointer file:transition-colors" %>
+          <p class="text-xs text-slate-400 mt-3">Formatos soportados: .stl</p>
         </div>
       </div>
 
-      <div>
-        <%= f.submit "🚀 Process STL", class: "brutalist-btn brutalist-btn-primary w-full text-center justify-center text-lg py-4" %>
+      <div class="flex justify-end">
+        <%= f.submit "Procesar STL",
+            class: "bg-sky-500 hover:bg-sky-600 text-white px-8 py-2.5 rounded-lg text-sm font-medium shadow-sm transition-all cursor-pointer flex items-center gap-2" %>
       </div>
     <% end %>
   </div>

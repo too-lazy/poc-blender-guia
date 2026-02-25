@@ -3,12 +3,12 @@ import bpy
 from mathutils import Vector
 
 
-def setup_occlusal_camera(target_obj, distance=0.3, ortho_scale=None):
+def setup_occlusal_camera(target_obj, distance=None, ortho_scale=None):
     """Posiciona una cámara ortográfica mirando hacia abajo (vista oclusal).
 
     Args:
         target_obj: Objeto sobre el cual centrar la cámara.
-        distance: Distancia de la cámara al objeto (metros).
+        distance: Distancia de la cámara al objeto. Si None, se calcula automáticamente.
         ortho_scale: Escala ortográfica. Si None, se calcula automáticamente.
 
     Returns:
@@ -19,10 +19,15 @@ def setup_occlusal_camera(target_obj, distance=0.3, ortho_scale=None):
     center = sum(bbox, Vector()) / 8
     dimensions = target_obj.dimensions
 
+    # Calcular distancia automática: bien por encima del punto más alto
+    if distance is None:
+        distance = max(dimensions.x, dimensions.y, dimensions.z) * 1.5
+
     # Crear o reusar cámara
     cam_data = bpy.data.cameras.new("OcclusalCam")
     cam_data.type = 'ORTHO'
     cam_data.ortho_scale = ortho_scale or max(dimensions.x, dimensions.y) * 1.2
+    cam_data.clip_end = distance * 4
 
     cam_obj = bpy.data.objects.new("OcclusalCam", cam_data)
     bpy.context.collection.objects.link(cam_obj)
