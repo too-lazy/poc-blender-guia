@@ -1,71 +1,74 @@
 <div class="space-y-6">
   <!-- Breadcrumb -->
-  <div class="text-sm text-gray-500">
-    <%= link_to @patient.name, patient_path(@patient), class: "text-indigo-600 hover:text-indigo-800" %> ›
+  <div class="text-sm font-bold text-gray-500">
+    <%= link_to @patient.name, patient_path(@patient), class: "text-brand hover:underline" %> ›
     <span class="text-gray-700">Case</span>
   </div>
 
   <div class="flex items-center justify-between">
     <div>
-      <h1 class="text-2xl font-bold text-gray-900"><%= @case.description.truncate(80) %></h1>
-      <div class="flex items-center space-x-3 mt-2">
+      <h1 class="text-3xl font-black text-gray-900"><%= @case.description.truncate(80) %></h1>
+      <div class="flex items-center gap-3 mt-3">
         <%= render partial: "shared/status_badge", locals: { status: @case.status } %>
-        <span class="text-sm text-gray-400">Created <%= time_ago_in_words(@case.created_at) %> ago</span>
+        <span class="text-sm text-gray-500 font-medium">Created <%= time_ago_in_words(@case.created_at) %> ago</span>
       </div>
     </div>
-    <div class="flex items-center space-x-3">
-      <%= link_to "Edit", edit_patient_case_path(@patient, @case), class: "text-indigo-600 hover:text-indigo-800 text-sm font-medium" %>
+    <div class="flex items-center gap-3">
+      <%= link_to "Edit", edit_patient_case_path(@patient, @case), class: "brutalist-btn brutalist-btn-ghost" %>
       <% if @case.stl_file.attached? %>
-        <%= button_to "Execute Workflow", execute_workflow_patient_case_path(@patient, @case),
+        <%= button_to "▶ Execute Workflow", execute_workflow_patient_case_path(@patient, @case),
             method: :post,
-            class: "bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700",
+            class: "brutalist-btn brutalist-btn-accent",
             data: { turbo_confirm: "Run Blender pipeline on this STL?" } %>
       <% end %>
     </div>
   </div>
 
   <!-- STL Info -->
-  <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-    <h2 class="text-sm font-medium text-gray-500 mb-2">STL File</h2>
+  <div class="brutalist-card p-6">
+    <h2 class="text-xs font-black uppercase tracking-wider text-gray-500 mb-3">STL File</h2>
     <% if @case.stl_file.attached? %>
-      <div class="flex items-center space-x-3">
-        <span class="text-gray-900 font-medium"><%= @case.stl_file.filename %></span>
-        <span class="text-sm text-gray-400"><%= number_to_human_size(@case.stl_file.byte_size) %></span>
+      <div class="flex items-center gap-3">
+        <span class="font-bold text-gray-900"><%= @case.stl_file.filename %></span>
+        <span class="text-sm text-gray-500"><%= number_to_human_size(@case.stl_file.byte_size) %></span>
       </div>
     <% else %>
-      <p class="text-gray-400">No STL file uploaded. <%= link_to "Upload one", edit_patient_case_path(@patient, @case), class: "text-indigo-600 hover:text-indigo-800" %>.</p>
+      <p class="text-gray-400 font-medium">No STL file uploaded. <%= link_to "Upload one", edit_patient_case_path(@patient, @case), class: "text-brand hover:underline font-bold" %>.</p>
     <% end %>
   </div>
 
   <!-- Workflow Runs -->
-  <div class="bg-white rounded-xl shadow-sm border border-gray-200">
-    <div class="px-6 py-4 border-b border-gray-200">
-      <h2 class="text-lg font-semibold text-gray-900">Workflow Runs</h2>
+  <div class="brutalist-card">
+    <div class="px-6 py-4 border-b-2 border-black">
+      <h2 class="text-lg font-black text-gray-900">Workflow Runs</h2>
     </div>
     <% if @workflow_runs.any? %>
-      <div class="divide-y divide-gray-100">
+      <div class="divide-y-2 divide-gray-200">
         <% @workflow_runs.each do |run| %>
-          <%= link_to patient_case_workflow_run_path(@patient, @case, run), class: "block px-6 py-4 hover:bg-gray-50 transition" do %>
+          <%= link_to patient_case_workflow_run_path(@patient, @case, run), class: "block px-6 py-4 hover:bg-cream transition-colors" do %>
             <div class="flex items-center justify-between">
-              <div class="flex items-center space-x-3">
+              <div class="flex items-center gap-3">
                 <%= render partial: "shared/status_badge", locals: { status: run.status } %>
-                <span class="text-sm text-gray-600">Run #<%= run.id %></span>
+                <span class="text-sm font-bold text-gray-700">Run #<%= run.id %></span>
                 <% if run.duration %>
-                  <span class="text-xs text-gray-400">(<%= "%.1f" % run.duration %>s)</span>
+                  <span class="text-xs text-gray-400 font-medium">(<%= "%.1f" % run.duration %>s)</span>
                 <% end %>
               </div>
-              <div class="flex items-center space-x-3">
+              <div class="flex items-center gap-3">
                 <% if run.render_output.attached? %>
-                  <span class="text-xs text-green-600">📸 Render available</span>
+                  <span class="text-xs font-bold text-teal-700">📸 Render</span>
                 <% end %>
-                <span class="text-xs text-gray-400"><%= time_ago_in_words(run.created_at) %> ago</span>
+                <span class="text-xs text-gray-500 font-medium"><%= time_ago_in_words(run.created_at) %> ago</span>
               </div>
             </div>
           <% end %>
         <% end %>
       </div>
     <% else %>
-      <div class="px-6 py-12 text-center text-gray-400">No runs yet. Execute the workflow to generate a render.</div>
+      <div class="px-6 py-16 text-center">
+        <p class="text-gray-400 text-lg font-bold">No runs yet.</p>
+        <p class="text-gray-400 text-sm mt-2">Execute the workflow to generate a render.</p>
+      </div>
     <% end %>
   </div>
 </div>

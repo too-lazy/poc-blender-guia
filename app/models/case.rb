@@ -1,5 +1,5 @@
 class Case < ApplicationRecord
-  belongs_to :patient
+  belongs_to :patient, optional: true
   has_many :workflow_runs, dependent: :destroy
   has_one_attached :stl_file
 

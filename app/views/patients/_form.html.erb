@@ -1,6 +1,6 @@
-<%= form_with(model: patient, class: "space-y-4") do |f| %>
+<%= form_with(model: patient, class: "space-y-5") do |f| %>
   <% if patient.errors.any? %>
-    <div class="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg text-sm">
+    <div class="bg-red-100 border-2 border-black text-red-900 px-4 py-3 font-bold text-sm shadow-brutal-sm">
       <% patient.errors.full_messages.each do |msg| %>
         <p><%= msg %></p>
       <% end %>
@@ -8,22 +8,22 @@
   <% end %>
 
   <div>
-    <%= f.label :name, class: "block text-sm font-medium text-gray-700 mb-1" %>
-    <%= f.text_field :name, class: "w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500", required: true %>
+    <%= f.label :name, class: "block text-sm font-bold text-gray-700 mb-2" %>
+    <%= f.text_field :name, class: "brutalist-input w-full", required: true %>
   </div>
 
   <div>
-    <%= f.label :email, class: "block text-sm font-medium text-gray-700 mb-1" %>
-    <%= f.email_field :email, class: "w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" %>
+    <%= f.label :email, class: "block text-sm font-bold text-gray-700 mb-2" %>
+    <%= f.email_field :email, class: "brutalist-input w-full" %>
   </div>
 
   <div>
-    <%= f.label :notes, class: "block text-sm font-medium text-gray-700 mb-1" %>
-    <%= f.text_area :notes, rows: 3, class: "w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" %>
+    <%= f.label :notes, class: "block text-sm font-bold text-gray-700 mb-2" %>
+    <%= f.text_area :notes, rows: 3, class: "brutalist-input w-full" %>
   </div>
 
-  <div class="flex items-center space-x-3 pt-2">
-    <%= f.submit class: "bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 cursor-pointer" %>
-    <%= link_to "Cancel", patients_path, class: "text-gray-500 hover:text-gray-700 text-sm" %>
+  <div class="flex items-center gap-3 pt-2">
+    <%= f.submit class: "brutalist-btn brutalist-btn-primary cursor-pointer" %>
+    <%= link_to "Cancel", patients_path, class: "brutalist-btn brutalist-btn-ghost" %>
   </div>
 <% end %>

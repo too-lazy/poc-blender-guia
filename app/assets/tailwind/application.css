@@ -1,1 +1,54 @@
 @import "tailwindcss";
+
+@theme {
+  --color-cream: #FFFBF5;
+  --color-accent: #14B8A6;
+  --color-accent-hover: #0D9488;
+  --color-brand: #6366F1;
+  --color-brand-light: #EEF2FF;
+  --color-brutal-shadow: #000000;
+  --shadow-brutal: 4px 4px 0px 0px var(--color-brutal-shadow);
+  --shadow-brutal-sm: 3px 3px 0px 0px var(--color-brutal-shadow);
+  --shadow-brutal-lg: 6px 6px 0px 0px var(--color-brutal-shadow);
+}
+
+/* Neobrutalism base components */
+@layer components {
+  .brutalist-card {
+    @apply bg-white border-2 border-black shadow-brutal;
+  }
+
+  .brutalist-input {
+    @apply border-2 border-black px-4 py-3 text-sm font-medium bg-white
+           focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2
+           placeholder:text-gray-400;
+  }
+
+  .brutalist-btn {
+    @apply inline-flex items-center gap-2 px-5 py-3 border-2 border-black
+           font-bold text-sm shadow-brutal-sm
+           hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none
+           active:translate-x-[3px] active:translate-y-[3px]
+           transition-all duration-100 cursor-pointer;
+  }
+
+  .brutalist-btn-primary {
+    @apply bg-brand text-white hover:bg-indigo-700;
+  }
+
+  .brutalist-btn-accent {
+    @apply bg-accent text-black hover:bg-accent-hover;
+  }
+
+  .brutalist-btn-danger {
+    @apply bg-red-500 text-white hover:bg-red-600;
+  }
+
+  .brutalist-btn-ghost {
+    @apply bg-white text-gray-800 hover:bg-gray-100;
+  }
+
+  .brutalist-badge {
+    @apply inline-flex items-center px-3 py-1 border-2 border-black text-xs font-black uppercase tracking-wider;
+  }
+}

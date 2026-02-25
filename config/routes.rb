@@ -1,6 +1,8 @@
 Rails.application.routes.draw do
   root "dashboard#index"
 
+  resource :quick_process, only: [ :new, :create, :show ]
+
   resources :patients do
     resources :cases, except: [ :index ] do
       member do

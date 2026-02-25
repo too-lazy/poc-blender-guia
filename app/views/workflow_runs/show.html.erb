@@ -1,18 +1,18 @@
 <div class="space-y-6">
   <!-- Breadcrumb -->
-  <div class="text-sm text-gray-500">
-    <%= link_to @patient.name, patient_path(@patient), class: "text-indigo-600 hover:text-indigo-800" %> ›
-    <%= link_to @case.description.truncate(40), patient_case_path(@patient, @case), class: "text-indigo-600 hover:text-indigo-800" %> ›
+  <div class="text-sm font-bold text-gray-500">
+    <%= link_to @patient.name, patient_path(@patient), class: "text-brand hover:underline" %> ›
+    <%= link_to @case.description.truncate(40), patient_case_path(@patient, @case), class: "text-brand hover:underline" %> ›
     <span class="text-gray-700">Run #<%= @run.id %></span>
   </div>
 
   <div class="flex items-center justify-between">
     <div>
-      <h1 class="text-2xl font-bold text-gray-900">Workflow Run #<%= @run.id %></h1>
-      <div class="flex items-center space-x-3 mt-2">
+      <h1 class="text-3xl font-black text-gray-900">Workflow Run #<%= @run.id %></h1>
+      <div class="flex items-center gap-3 mt-3">
         <%= render partial: "shared/status_badge", locals: { status: @run.status } %>
         <% if @run.duration %>
-          <span class="text-sm text-gray-500">Duration: <%= "%.1f" % @run.duration %>s</span>
+          <span class="text-sm text-gray-500 font-medium">Duration: <%= "%.1f" % @run.duration %>s</span>
         <% end %>
       </div>
     </div>
@@ -20,46 +20,46 @@
 
   <!-- Timestamps -->
   <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-      <div class="text-xs font-medium text-gray-500">Created</div>
-      <div class="text-sm text-gray-900 mt-1"><%= @run.created_at.strftime("%Y-%m-%d %H:%M:%S") %></div>
+    <div class="brutalist-card p-4">
+      <div class="text-xs font-black uppercase tracking-wider text-gray-500">Created</div>
+      <div class="text-sm font-bold text-gray-900 mt-1"><%= @run.created_at.strftime("%Y-%m-%d %H:%M:%S") %></div>
     </div>
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-      <div class="text-xs font-medium text-gray-500">Started</div>
-      <div class="text-sm text-gray-900 mt-1"><%= @run.started_at&.strftime("%Y-%m-%d %H:%M:%S") || "—" %></div>
+    <div class="brutalist-card p-4">
+      <div class="text-xs font-black uppercase tracking-wider text-gray-500">Started</div>
+      <div class="text-sm font-bold text-gray-900 mt-1"><%= @run.started_at&.strftime("%Y-%m-%d %H:%M:%S") || "—" %></div>
     </div>
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-      <div class="text-xs font-medium text-gray-500">Completed</div>
-      <div class="text-sm text-gray-900 mt-1"><%= @run.completed_at&.strftime("%Y-%m-%d %H:%M:%S") || "—" %></div>
+    <div class="brutalist-card p-4">
+      <div class="text-xs font-black uppercase tracking-wider text-gray-500">Completed</div>
+      <div class="text-sm font-bold text-gray-900 mt-1"><%= @run.completed_at&.strftime("%Y-%m-%d %H:%M:%S") || "—" %></div>
     </div>
   </div>
 
   <!-- Render Output -->
   <% if @run.render_output.attached? %>
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-      <h2 class="text-lg font-semibold text-gray-900 mb-4">Render Output</h2>
-      <div class="bg-gray-100 rounded-lg p-4 flex justify-center">
-        <%= image_tag url_for(@run.render_output), class: "max-w-full max-h-96 rounded shadow", alt: "Occlusal render" %>
+    <div class="brutalist-card p-6">
+      <h2 class="text-lg font-black text-gray-900 mb-4">Render Output</h2>
+      <div class="bg-cream border-2 border-black p-4 flex justify-center">
+        <%= image_tag url_for(@run.render_output), class: "max-w-full max-h-96", alt: "Occlusal render" %>
       </div>
-      <div class="mt-3 text-center">
-        <%= link_to "Download PNG", rails_blob_path(@run.render_output, disposition: "attachment"), class: "text-indigo-600 hover:text-indigo-800 text-sm font-medium" %>
+      <div class="mt-4 text-center">
+        <%= link_to "⬇ Download PNG", rails_blob_path(@run.render_output, disposition: "attachment"), class: "brutalist-btn brutalist-btn-accent" %>
       </div>
     </div>
   <% end %>
 
   <!-- Error -->
   <% if @run.error_message.present? %>
-    <div class="bg-red-50 rounded-xl border border-red-200 p-6">
-      <h2 class="text-sm font-semibold text-red-800 mb-2">Error</h2>
-      <pre class="text-xs text-red-700 whitespace-pre-wrap"><%= @run.error_message %></pre>
+    <div class="bg-red-100 border-2 border-black p-6 shadow-brutal">
+      <h2 class="text-sm font-black text-red-900 mb-2">⚠ Error</h2>
+      <pre class="text-xs text-red-800 whitespace-pre-wrap font-mono"><%= @run.error_message %></pre>
     </div>
   <% end %>
 
   <!-- Log Output -->
   <% if @run.log_output.present? %>
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-      <h2 class="text-sm font-semibold text-gray-900 mb-2">Log Output</h2>
-      <pre class="text-xs text-gray-600 whitespace-pre-wrap bg-gray-50 p-4 rounded-lg max-h-96 overflow-y-auto"><%= @run.log_output %></pre>
+    <div class="brutalist-card p-6">
+      <h2 class="text-sm font-black text-gray-900 mb-3">Log Output</h2>
+      <pre class="text-xs text-gray-600 whitespace-pre-wrap bg-cream border-2 border-gray-300 p-4 max-h-96 overflow-y-auto font-mono"><%= @run.log_output %></pre>
     </div>
   <% end %>
 </div>

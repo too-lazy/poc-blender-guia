@@ -1,0 +1,36 @@
+<div class="space-y-8">
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-3xl font-black text-gray-900">Quick Processes</h1>
+      <p class="text-gray-600 mt-1">Recent patient-free workflow runs</p>
+    </div>
+    <%= link_to "🚀 New Quick Process", new_quick_process_path, class: "brutalist-btn brutalist-btn-primary" %>
+  </div>
+
+  <div class="brutalist-card">
+    <% if @recent_runs.any? %>
+      <div class="divide-y-2 divide-black">
+        <% @recent_runs.each do |run| %>
+          <div class="px-6 py-4 flex items-center justify-between">
+            <div>
+              <div class="font-bold text-gray-900"><%= run.case.description&.truncate(60) || "Quick process" %></div>
+              <div class="text-xs text-gray-500 mt-1">Run #<%= run.id %></div>
+            </div>
+            <div class="flex items-center space-x-4">
+              <%= render partial: "shared/status_badge", locals: { status: run.status } %>
+              <% if run.render_output.attached? %>
+                <span class="text-xs font-bold text-teal-700">📸 Render</span>
+              <% end %>
+              <span class="text-xs text-gray-500"><%= time_ago_in_words(run.created_at) %> ago</span>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    <% else %>
+      <div class="px-6 py-16 text-center">
+        <p class="text-gray-500 text-lg">No quick processes yet.</p>
+        <p class="text-gray-400 text-sm mt-2">Upload an STL to get started!</p>
+      </div>
+    <% end %>
+  </div>
+</div>
