@@ -41,6 +41,9 @@ def render_to_file(output_path, resolution_x=1920, resolution_y=1080):
     scene.render.image_settings.file_format = 'PNG'
     scene.render.filepath = output_path
 
+    # Disable denoising (not available in distro Blender builds)
+    scene.cycles.use_denoising = False
+
     # Fondo blanco
     scene.render.film_transparent = False
     bpy.context.scene.world = bpy.data.worlds.new("World")
