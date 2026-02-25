@@ -12,7 +12,7 @@ servers:
 # Enable SSL auto certification via Let's Encrypt.
 proxy:
   ssl: true
-  host: iappliances.toolazy.to
+  host: iappliances.toolazy.to, iappliances.toolazy.cl
   app_port: 3000
 
 # Credentials for your image host.
