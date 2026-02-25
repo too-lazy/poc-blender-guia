@@ -6,20 +6,23 @@ export default class extends Controller {
   static values = { url: String }
 
   async connect() {
-    this.canvas = this.element.querySelector("[data-stl-viewer-target='canvas']")
-    if (!this.canvas) {
-      this.canvas = document.createElement("div")
-      this.canvas.style.cssText = "width:100%;height:500px;"
-      this.element.querySelector("[data-stl-viewer-target='container']")?.appendChild(this.canvas)
-        || this.element.appendChild(this.canvas)
-    }
+    this.canvas = this.element.querySelector("[data-stl-viewer-target='container']")
+    if (!this.canvas) return
 
     this.showLoading()
-    await this.loadThreeJS()
-    this.initScene()
-    await this.loadSTL()
-    this.hideLoading()
-    this.animate()
+
+    try {
+      await this.loadThreeJS()
+      this.initScene()
+      await this.loadSTL()
+      this.hideLoading()
+      this.animate()
+    } catch (e) {
+      console.error("STL Viewer error:", e)
+      this.hideLoading()
+      this.canvas.innerHTML = `<div style="padding:40px;text-align:center;color:#991b1b;font-weight:bold">
+        ⚠ Failed to load 3D viewer: ${e.message}</div>`
+    }
   }
 
   disconnect() {
@@ -28,14 +31,14 @@ export default class extends Controller {
       this.renderer.dispose()
       this.renderer.domElement.remove()
     }
-    window.removeEventListener("resize", this.onResize)
+    if (this._onResize) window.removeEventListener("resize", this._onResize)
   }
 
   showLoading() {
     this.loadingEl = document.createElement("div")
     this.loadingEl.style.cssText = `
-      position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
-      background:#FFFBF5;z-index:10;
+      display:flex;align-items:center;justify-content:center;
+      width:100%;height:100%;background:#FFFBF5;
     `
     this.loadingEl.innerHTML = `
       <div style="text-align:center">
@@ -43,7 +46,6 @@ export default class extends Controller {
         <div style="font-weight:800;font-size:14px;color:#6366F1">Loading 3D model…</div>
       </div>
     `
-    this.canvas.style.position = "relative"
     this.canvas.appendChild(this.loadingEl)
   }
 
@@ -52,39 +54,23 @@ export default class extends Controller {
   }
 
   async loadThreeJS() {
-    if (window.THREE) return
+    if (this.THREE) return
 
-    const CDN = "https://cdn.jsdelivr.net/npm/three@0.170.0"
+    const CDN = "https://esm.sh/three@0.170.0"
 
-    await new Promise((resolve, reject) => {
-      const s = document.createElement("script")
-      s.src = `${CDN}/build/three.min.js`
-      s.onload = resolve
-      s.onerror = reject
-      document.head.appendChild(s)
-    })
-
-    // Load OrbitControls & STLLoader as global scripts
-    await Promise.all([
-      new Promise((resolve, reject) => {
-        const s = document.createElement("script")
-        s.src = `${CDN}/examples/js/controls/OrbitControls.js`
-        s.onload = resolve
-        s.onerror = reject
-        document.head.appendChild(s)
-      }),
-      new Promise((resolve, reject) => {
-        const s = document.createElement("script")
-        s.src = `${CDN}/examples/js/loaders/STLLoader.js`
-        s.onload = resolve
-        s.onerror = reject
-        document.head.appendChild(s)
-      })
+    const [threeModule, controlsModule, loaderModule] = await Promise.all([
+      import(CDN),
+      import(`${CDN}/examples/jsm/controls/OrbitControls.js`),
+      import(`${CDN}/examples/jsm/loaders/STLLoader.js`)
     ])
+
+    this.THREE = threeModule
+    this.OrbitControls = controlsModule.OrbitControls
+    this.STLLoader = loaderModule.STLLoader
   }
 
   initScene() {
-    const THREE = window.THREE
+    const THREE = this.THREE
     const w = this.canvas.clientWidth
     const h = this.canvas.clientHeight || 500
 
@@ -100,8 +86,7 @@ export default class extends Controller {
     this.renderer.shadowMap.enabled = true
     this.canvas.appendChild(this.renderer.domElement)
 
-    // OrbitControls
-    this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement)
+    this.controls = new this.OrbitControls(this.camera, this.renderer.domElement)
     this.controls.enableDamping = true
     this.controls.dampingFactor = 0.08
     this.controls.rotateSpeed = 0.8
@@ -124,70 +109,56 @@ export default class extends Controller {
     grid.rotation.x = Math.PI / 2
     this.scene.add(grid)
 
-    // Resize handler
-    this.onResize = () => {
+    this._onResize = () => {
       const w = this.canvas.clientWidth
       const h = this.canvas.clientHeight || 500
       this.camera.aspect = w / h
       this.camera.updateProjectionMatrix()
       this.renderer.setSize(w, h)
     }
-    window.addEventListener("resize", this.onResize)
+    window.addEventListener("resize", this._onResize)
   }
 
   async loadSTL() {
-    const THREE = window.THREE
-    const loader = new THREE.STLLoader()
+    const THREE = this.THREE
+    const loader = new this.STLLoader()
 
-    return new Promise((resolve, reject) => {
-      loader.load(
-        this.urlValue,
-        (geometry) => {
-          // Bone-colored material matching Blender pipeline
-          const material = new THREE.MeshPhysicalMaterial({
-            color: 0xE6D9BF,
-            roughness: 0.4,
-            metalness: 0.0,
-            clearcoat: 0.1,
-          })
+    const response = await fetch(this.urlValue)
+    if (!response.ok) throw new Error(`HTTP ${response.status}`)
+    const buffer = await response.arrayBuffer()
+    const geometry = loader.parse(buffer)
 
-          const mesh = new THREE.Mesh(geometry, material)
-          mesh.castShadow = true
-          mesh.receiveShadow = true
-
-          // Center geometry
-          geometry.computeBoundingBox()
-          const box = geometry.boundingBox
-          const center = new THREE.Vector3()
-          box.getCenter(center)
-          geometry.translate(-center.x, -center.y, -center.z)
-
-          // Fit camera to model
-          const size = new THREE.Vector3()
-          box.getSize(size)
-          const maxDim = Math.max(size.x, size.y, size.z)
-          const fov = this.camera.fov * (Math.PI / 180)
-          const dist = maxDim / (2 * Math.tan(fov / 2)) * 1.5
-
-          this.camera.position.set(dist * 0.5, dist * 0.5, dist)
-          this.camera.lookAt(0, 0, 0)
-          this.controls.target.set(0, 0, 0)
-          this.controls.update()
-
-          this.scene.add(mesh)
-          this.mesh = mesh
-          resolve()
-        },
-        undefined,
-        (error) => {
-          console.error("STL load error:", error)
-          this.hideLoading()
-          this.canvas.innerHTML = `<div style="padding:40px;text-align:center;color:#991b1b;font-weight:bold">
-            ⚠ Failed to load 3D model</div>`
-          reject(error)
-        }
-      )
+    const material = new THREE.MeshPhysicalMaterial({
+      color: 0xE6D9BF,
+      roughness: 0.4,
+      metalness: 0.0,
+      clearcoat: 0.1,
     })
+
+    const mesh = new THREE.Mesh(geometry, material)
+    mesh.castShadow = true
+    mesh.receiveShadow = true
+
+    // Center geometry
+    geometry.computeBoundingBox()
+    const center = new THREE.Vector3()
+    geometry.boundingBox.getCenter(center)
+    geometry.translate(-center.x, -center.y, -center.z)
+
+    // Fit camera
+    const size = new THREE.Vector3()
+    geometry.boundingBox.getSize(size)
+    const maxDim = Math.max(size.x, size.y, size.z)
+    const fov = this.camera.fov * (Math.PI / 180)
+    const dist = maxDim / (2 * Math.tan(fov / 2)) * 1.5
+
+    this.camera.position.set(dist * 0.5, dist * 0.5, dist)
+    this.camera.lookAt(0, 0, 0)
+    this.controls.target.set(0, 0, 0)
+    this.controls.update()
+
+    this.scene.add(mesh)
+    this.mesh = mesh
   }
 
   animate() {
@@ -196,11 +167,11 @@ export default class extends Controller {
     this.renderer.render(this.scene, this.camera)
   }
 
-  // Reset camera to default position
   resetView() {
     if (!this.mesh) return
-    const box = new window.THREE.Box3().setFromObject(this.mesh)
-    const size = new window.THREE.Vector3()
+    const THREE = this.THREE
+    const box = new THREE.Box3().setFromObject(this.mesh)
+    const size = new THREE.Vector3()
     box.getSize(size)
     const maxDim = Math.max(size.x, size.y, size.z)
     const fov = this.camera.fov * (Math.PI / 180)
@@ -212,7 +183,6 @@ export default class extends Controller {
     this.controls.update()
   }
 
-  // Toggle wireframe
   toggleWireframe() {
     if (!this.mesh) return
     this.mesh.material.wireframe = !this.mesh.material.wireframe
