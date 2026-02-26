@@ -279,6 +279,94 @@ def apply_registration(plane, registration, image_width, image_height):
     print(f"Rotación: {np.degrees(angle):.2f}°, Escala: {scale:.4f}")
 
 
+def auto_register(radiograph_data, dental_obj):
+    """Registro automático sin landmarks manuales.
+
+    Alinea la radiografía con el modelo 3D usando análisis geométrico:
+    1. Extrae el bounding box del modelo (proyección XY)
+    2. Detecta la región dental en la radiografía (contorno más brillante)
+    3. Calcula escala + traslación para alinear ambos
+
+    Args:
+        radiograph_data: dict retornado por radiograph.load_radiograph.
+        dental_obj: objeto Blender del modelo dental.
+
+    Returns:
+        dict de registro (scale, translation, rotation_z, error_rms).
+    """
+    import bpy
+    from mathutils import Vector
+
+    # 1. Obtener geometría del modelo 3D (proyección XY)
+    bbox = [dental_obj.matrix_world @ Vector(c) for c in dental_obj.bound_box]
+    xs = [v.x for v in bbox]
+    ys = [v.y for v in bbox]
+    zs = [v.z for v in bbox]
+
+    model_cx = (min(xs) + max(xs)) / 2
+    model_cy = (min(ys) + max(ys)) / 2
+    model_w = max(xs) - min(xs)
+    model_h = max(ys) - min(ys)
+    model_z = min(zs)
+
+    # 2. Detectar región dental en la radiografía
+    img_w = radiograph_data['width']
+    img_h = radiograph_data['height']
+
+    try:
+        import cv2
+        image = radiograph_data['image']
+        img_uint8 = (np.clip(image, 0, 1) * 255).astype(np.uint8)
+        if len(img_uint8.shape) == 3:
+            img_uint8 = cv2.cvtColor(img_uint8, cv2.COLOR_RGB2GRAY)
+
+        # Umbralizar para encontrar la región dental (brillo > media)
+        _, thresh = cv2.threshold(img_uint8, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+        if contours:
+            # Usar el contorno más grande como región dental
+            largest = max(contours, key=cv2.contourArea)
+            rx, ry, rw, rh = cv2.boundingRect(largest)
+            radio_cx = rx + rw / 2
+            radio_cy = ry + rh / 2
+        else:
+            radio_cx, radio_cy = img_w / 2, img_h / 2
+            rw, rh = img_w * 0.8, img_h * 0.6
+    except ImportError:
+        # Sin OpenCV, usar centro de la imagen
+        radio_cx, radio_cy = img_w / 2, img_h / 2
+        rw, rh = img_w * 0.8, img_h * 0.6
+
+    # 3. Calcular transformación
+    # Escala: relación entre tamaño del modelo y tamaño de la región en la imagen
+    scale_x = model_w / (rw / img_w) if rw > 0 else model_w
+    scale_y = model_h / (rh / img_h) if rh > 0 else model_h
+    scale = (scale_x + scale_y) / 2
+
+    # Traslación: centrar el plano sobre el modelo
+    tx = model_cx
+    ty = model_cy
+    tz = model_z - 0.5  # Ligeramente debajo del modelo
+
+    registration = {
+        'scale': float(scale),
+        'translation': [float(tx), float(ty), float(tz)],
+        'rotation_z': 0.0,
+        'error_rms': 0.0,
+    }
+
+    print(f"\n=== Registro automático ===")
+    print(f"  Región dental en radiografía: centro=({radio_cx:.0f}, {radio_cy:.0f}), "
+          f"tamaño={rw:.0f}x{rh:.0f} px")
+    print(f"  Modelo 3D: centro=({model_cx:.2f}, {model_cy:.2f}), "
+          f"tamaño={model_w:.2f}x{model_h:.2f}")
+    print(f"  Escala: {registration['scale']:.4f}")
+    print(f"  Posición plano: ({tx:.3f}, {ty:.3f}, {tz:.3f})")
+
+    return registration
+
+
 # --- Funciones auxiliares ---
 
 def _input_2d(prompt):

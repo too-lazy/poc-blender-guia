@@ -102,8 +102,8 @@ def _process_radiograph(parsed, dental_obj):
     from radiograph import load_radiograph
     from overlay import create_radiograph_plane, scale_plane_to_model, set_plane_opacity
     from registration import (
-        load_landmarks_json, collect_landmarks_interactive,
-        detect_landmarks_auto, compute_registration, apply_registration,
+        load_landmarks_json, compute_registration, apply_registration,
+        auto_register,
     )
 
     radio_path = parsed['radiograph']
@@ -121,36 +121,21 @@ def _process_radiograph(parsed, dental_obj):
     scale_plane_to_model(plane, dental_obj)
     set_plane_opacity(plane, alpha=0.7)
 
-    # Registro con landmarks
+    # Registro
     if parsed['landmarks']:
+        # Manual: usar archivo de landmarks
         print(f"Cargando landmarks: {parsed['landmarks']}")
         landmarks = load_landmarks_json(parsed['landmarks'])
-    elif parsed['auto_detect']:
-        print("Detectando landmarks automáticamente...")
-        candidates = detect_landmarks_auto(radio_data)
-        print("Nota: La detección automática sugiere candidatos en la radiografía.")
-        print("      Se necesitan las coordenadas 3D correspondientes en el modelo.")
-        if sys.stdin.isatty():
-            landmarks = collect_landmarks_interactive(radio_data)
-        else:
-            print("Sin terminal interactiva. Usando posición por defecto.")
-            landmarks = None
-    elif sys.stdin.isatty():
-        print("Ingrese landmarks manualmente...")
-        landmarks = collect_landmarks_interactive(radio_data)
-    else:
-        print("Sin landmarks ni terminal interactiva. Usando posición por defecto.")
-        landmarks = None
-
-    if landmarks and len(landmarks['points_2d']) >= 3:
-        print("Calculando registro...")
+        print("Calculando registro con landmarks...")
         reg = compute_registration(landmarks, radio_data['width'], radio_data['height'])
         apply_registration(plane, reg, radio_data['width'], radio_data['height'])
         print(f"Registro aplicado (error RMS: {reg['error_rms']:.6f})")
     else:
-        print("Insuficientes landmarks para registro. Plano posicionado por defecto.")
-        from overlay import position_plane_below
-        position_plane_below(plane, dental_obj)
+        # Automático: alinear por geometría sin landmarks
+        print("Registro automático (sin landmarks)...")
+        reg = auto_register(radio_data, dental_obj)
+        apply_registration(plane, reg, radio_data['width'], radio_data['height'])
+        print("Registro automático aplicado.")
 
 
 if __name__ == "__main__":
