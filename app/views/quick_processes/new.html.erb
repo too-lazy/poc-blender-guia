@@ -58,6 +58,24 @@
         </div>
       </div>
 
+      <div>
+        <%= f.label :radiograph_file, "Radiografía (opcional)", class: "block text-sm font-medium text-slate-700 mb-2" %>
+        <div class="border-2 border-dashed border-slate-200 rounded-xl p-8 text-center hover:border-sky-400 hover:bg-sky-50/30 transition-all cursor-pointer">
+          <div class="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-3">
+            <svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4"/>
+            </svg>
+          </div>
+          <h3 class="text-slate-600 font-semibold mb-1">Cargar Radiografía</h3>
+          <p class="text-sm text-slate-400 max-w-md mx-auto mb-3">
+            Panorámica, periapical u otra radiografía dental (opcional)
+          </p>
+          <%= f.file_field :radiograph_file, accept: ".png,.jpg,.jpeg,.dcm,.dicom",
+              class: "block w-full text-sm text-slate-600 file:mr-4 file:py-2 file:px-5 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-slate-100 file:text-slate-600 hover:file:bg-slate-200 file:cursor-pointer file:transition-colors" %>
+          <p class="text-xs text-slate-400 mt-2">Formatos: .png, .jpg, .dcm (DICOM)</p>
+        </div>
+      </div>
+
       <div class="flex justify-end">
         <%= f.submit "Procesar STL",
             class: "bg-sky-500 hover:bg-sky-600 text-white px-8 py-2.5 rounded-lg text-sm font-medium shadow-sm transition-all cursor-pointer flex items-center gap-2" %>

@@ -32,6 +32,6 @@ class QuickProcessesController < ApplicationController
   private
 
   def case_params
-    params.expect(case: [ :description, :stl_file ])
+    params.expect(case: [ :description, :stl_file, :radiograph_file ])
   end
 end

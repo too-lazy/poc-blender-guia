@@ -23,6 +23,16 @@ class BlenderWorkflowJob < ApplicationJob
         "--", input_path, output_path
       ]
 
+      # Add radiograph if attached
+      if dental_case.radiograph_file.attached?
+        ext = File.extname(dental_case.radiograph_file.filename.to_s).presence || ".png"
+        radio_path = File.join(tmpdir, "radiograph#{ext}")
+        File.open(radio_path, "wb") do |f|
+          dental_case.radiograph_file.download { |chunk| f.write(chunk) }
+        end
+        cmd += [ "--radiograph", radio_path ]
+      end
+
       log_output = []
       IO.popen(cmd, err: [ :child, :out ]) do |io|
         io.each_line { |line| log_output << line }
