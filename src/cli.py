@@ -130,12 +130,19 @@ def _process_radiograph(parsed, dental_obj):
         candidates = detect_landmarks_auto(radio_data)
         print("Nota: La detección automática sugiere candidatos en la radiografía.")
         print("      Se necesitan las coordenadas 3D correspondientes en el modelo.")
-        landmarks = collect_landmarks_interactive(radio_data)
-    else:
+        if sys.stdin.isatty():
+            landmarks = collect_landmarks_interactive(radio_data)
+        else:
+            print("Sin terminal interactiva. Usando posición por defecto.")
+            landmarks = None
+    elif sys.stdin.isatty():
         print("Ingrese landmarks manualmente...")
         landmarks = collect_landmarks_interactive(radio_data)
+    else:
+        print("Sin landmarks ni terminal interactiva. Usando posición por defecto.")
+        landmarks = None
 
-    if len(landmarks['points_2d']) >= 3:
+    if landmarks and len(landmarks['points_2d']) >= 3:
         print("Calculando registro...")
         reg = compute_registration(landmarks, radio_data['width'], radio_data['height'])
         apply_registration(plane, reg, radio_data['width'], radio_data['height'])
