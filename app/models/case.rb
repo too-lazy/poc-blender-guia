@@ -3,6 +3,7 @@ class Case < ApplicationRecord
   has_many :workflow_runs, dependent: :destroy
   has_one_attached :stl_file
   has_one_attached :radiograph_file
+  has_one_attached :landmarks_file
 
   validates :description, presence: true
   validates :status, inclusion: { in: %w[pending processing completed failed] }

@@ -31,6 +31,15 @@ class BlenderWorkflowJob < ApplicationJob
           dental_case.radiograph_file.download { |chunk| f.write(chunk) }
         end
         cmd += [ "--radiograph", radio_path ]
+
+        # Add landmarks if attached
+        if dental_case.landmarks_file.attached?
+          landmarks_path = File.join(tmpdir, "landmarks.json")
+          File.open(landmarks_path, "wb") do |f|
+            dental_case.landmarks_file.download { |chunk| f.write(chunk) }
+          end
+          cmd += [ "--landmarks", landmarks_path ]
+        end
       end
 
       log_output = []
