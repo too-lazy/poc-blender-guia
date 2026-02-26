@@ -1,3 +1,6 @@
-# Dependencias para fases futuras (fuera de Blender)
+# Dependencias del pipeline
 pydicom>=3.0
 numpy>=2.0
+opencv-python>=4.8
+Pillow>=10.0
+scipy>=1.11

@@ -1,0 +1,7 @@
+{
+  "landmarks": [
+    {"name": "molar_sup_der", "image": [200, 200], "model": [-10.0, 0.0, -2.0]},
+    {"name": "incisivo_central", "image": [400, 150], "model": [0.0, 5.0, -2.0]},
+    {"name": "molar_sup_izq", "image": [600, 200], "model": [10.0, 0.0, -2.0]}
+  ]
+}

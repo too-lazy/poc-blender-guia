@@ -12,21 +12,21 @@ Pipeline incremental en Python para Blender (modo headless/CLI). Empezamos con u
 
 ## Fases
 
-### Fase 1 — Carga de modelo + Renderizado oclusal (MVP)
+### Fase 1 — Carga de modelo + Renderizado oclusal (MVP) ✅
 Objetivo: Demostrar que podemos cargar un STL dental en Blender headless, posicionar cámara oclusal y generar un render.
 
-- `setup-project`: Estructura del proyecto Python, README, dependencias (bpy)
-- `load-stl`: Script que carga un archivo STL en Blender, centra y escala el modelo
-- `occlusal-camera`: Posicionar cámara en vista oclusal (superior, mirando hacia abajo al plano oclusal)
-- `render-occlusal`: Configurar iluminación básica y renderizar imagen PNG de la vista oclusal
-- `cli-entrypoint`: Script CLI que orquesta: recibe path STL → carga → renderiza → exporta PNG
+- ✅ `setup-project`: Estructura del proyecto Python, README, dependencias (bpy)
+- ✅ `load-stl`: Script que carga un archivo STL en Blender, centra y escala el modelo
+- ✅ `occlusal-camera`: Posicionar cámara en vista oclusal (superior, mirando hacia abajo al plano oclusal)
+- ✅ `render-occlusal`: Configurar iluminación básica y renderizar imagen PNG de la vista oclusal
+- ✅ `cli-entrypoint`: Script CLI que orquesta: recibe path STL → carga → renderiza → exporta PNG
 
-### Fase 2 — Soporte de radiografías y registro
+### Fase 2 — Soporte de radiografías y registro ✅
 Objetivo: Incorporar datos radiográficos y alinearlos con el modelo 3D.
 
-- `dicom-loader`: Carga y procesamiento de DICOM (o imágenes 2D como fallback)
-- `image-overlay`: Superponer/mapear datos radiográficos sobre el modelo 3D
-- `registration`: Registro (alineación) entre modelo dental y radiografía
+- ✅ `dicom-loader`: Carga DICOM (pydicom) y 2D (PNG/JPEG via OpenCV/Pillow), normalización → `src/radiograph.py`
+- ✅ `image-overlay`: Plano de referencia texturizado en escena Blender con opacidad → `src/overlay.py`
+- ✅ `registration`: Landmarks interactivos/JSON + auto-detección OpenCV + registro least-squares → `src/registration.py`
 
 ### Fase 3 — Generación de guía quirúrgica
 Objetivo: Generar la guía 3D imprimible para posicionamiento de tornillos.
@@ -54,8 +54,11 @@ poc-blender-guia/
 │   ├── loader.py            # Carga de STL/modelos
 │   ├── camera.py            # Configuración de cámara oclusal
 │   ├── render.py            # Renderizado
+│   ├── radiograph.py        # Carga de radiografías (DICOM/2D)
+│   ├── overlay.py           # Plano de referencia con textura
+│   ├── registration.py      # Registro basado en landmarks
 │   └── guide.py             # (Fase 3) Generación de guía
-├── samples/                 # Archivos de ejemplo (STL de prueba)
+├── samples/                 # Archivos de ejemplo (STL, radiografías, landmarks)
 ├── output/                  # Renders y guías generadas
 └── tests/
     └── test_loader.py
