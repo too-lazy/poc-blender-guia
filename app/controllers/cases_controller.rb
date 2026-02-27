@@ -40,8 +40,11 @@ class CasesController < ApplicationController
       return
     end
 
-    run = @case.workflow_runs.create!(status: "pending")
-    @case.update!(status: "processing")
+    run = nil
+    ActiveRecord::Base.transaction do
+      run = @case.workflow_runs.create!(status: "pending")
+      @case.update!(status: "processing")
+    end
     BlenderWorkflowJob.perform_later(run.id)
     redirect_to patient_case_path(@patient, @case), notice: "Workflow started."
   end

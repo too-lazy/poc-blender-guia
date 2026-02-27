@@ -1,5 +1,5 @@
 <% if @run.status.in?(%w[pending running]) %>
-  <meta http-equiv="refresh" content="5">
+  <script>setTimeout(() => { window.location.reload() }, 5000)</script>
 <% end %>
 
 <div class="space-y-6">
@@ -40,6 +40,35 @@
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
           STL File
         <% end %>
+      <% else %>
+        <% if @case.upper_arch_file.attached? %>
+          <%= link_to rails_blob_path(@case.upper_arch_file, disposition: "attachment"),
+              class: "bg-white hover:bg-sky-50 text-slate-700 px-4 py-2 rounded-lg text-sm font-medium border border-sky-200 transition-all flex items-center gap-2" do %>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            Arco Superior
+          <% end %>
+        <% end %>
+        <% if @case.lower_arch_file.attached? %>
+          <%= link_to rails_blob_path(@case.lower_arch_file, disposition: "attachment"),
+              class: "bg-white hover:bg-sky-50 text-slate-700 px-4 py-2 rounded-lg text-sm font-medium border border-sky-200 transition-all flex items-center gap-2" do %>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            Arco Inferior
+          <% end %>
+        <% end %>
+      <% end %>
+      <% if @run.status == "completed" && (@case.upper_arch_file.attached? || @case.stl_file.attached?) %>
+        <%= link_to place_screws_workflow_run_path(@run),
+            class: "bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm transition-all flex items-center gap-2" do %>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          Colocar Tornillos
+        <% end %>
+      <% end %>
+      <% if @case.guide_stl_file.attached? %>
+        <%= link_to rails_blob_path(@case.guide_stl_file, disposition: "attachment"),
+            class: "bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm transition-all flex items-center gap-2" do %>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+          Descargar Guía STL
+        <% end %>
       <% end %>
     </div>
   </div>
@@ -61,8 +90,13 @@
   </div>
 
   <!-- 3D STL Viewer -->
-  <% if @case.stl_file.attached? %>
-    <div class="bg-white border border-sky-100 rounded-xl shadow-sm overflow-hidden" data-controller="stl-viewer" data-stl-viewer-url-value="<%= url_for(@case.stl_file) %>">
+  <% stl_upper = @case.stl_file.attached? ? @case.stl_file : (@case.upper_arch_file.attached? ? @case.upper_arch_file : nil) %>
+  <% stl_lower = @case.lower_arch_file.attached? ? @case.lower_arch_file : nil %>
+  <% if stl_upper %>
+    <div class="bg-white border border-sky-100 rounded-xl shadow-sm overflow-hidden"
+         data-controller="stl-viewer"
+         data-stl-viewer-url-value="<%= rails_blob_url(stl_upper, disposition: :inline) %>"
+         <%= stl_lower ? "data-stl-viewer-lower-url-value=\"#{rails_blob_url(stl_lower, disposition: :inline)}\"".html_safe : "" %>>
       <div class="px-6 py-4 border-b border-sky-50 flex items-center justify-between">
         <h2 class="text-slate-900 font-semibold">Visor 3D del Modelo</h2>
         <div class="flex items-center gap-2">

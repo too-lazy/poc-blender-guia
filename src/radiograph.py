@@ -1,4 +1,4 @@
-"""Carga y procesamiento de radiografías (DICOM y 2D)."""
+"""Carga y procesamiento de radiografías (DICOM single-slice, CBCT multi-slice y 2D)."""
 import os
 import numpy as np
 
@@ -23,6 +23,131 @@ def load_radiograph(filepath):
         return _load_dicom(filepath)
     else:
         return _load_image(filepath)
+
+
+def load_dicom_series(directory, series_filter=None):
+    """Carga una serie DICOM multi-slice (CBCT) como volumen 3D.
+
+    Busca todos los archivos DICOM en el directorio, los ordena por
+    posición de slice y los apila en un volumen 3D.
+
+    Args:
+        directory: Ruta al directorio con archivos DICOM (ej. CT3/).
+        series_filter: Filtro opcional por SeriesDescription (ej. 'CTVolume').
+            Si None, usa todos los archivos DICOM encontrados.
+
+    Returns:
+        dict con:
+            - 'volume': numpy array float32 (D, H, W) normalizado [0, 1]
+            - 'width': ancho en píxeles
+            - 'height': alto en píxeles
+            - 'depth': número de slices
+            - 'spacing': (row_spacing, col_spacing, slice_thickness) en mm
+            - 'format': 'cbct'
+            - 'metadata': dict con info adicional
+    """
+    try:
+        import pydicom
+    except ImportError:
+        raise ImportError("pydicom es requerido para cargar DICOM: pip install pydicom")
+
+    if not os.path.isdir(directory):
+        raise NotADirectoryError(f"No es un directorio: {directory}")
+
+    # Recopilar archivos DICOM válidos
+    slices = []
+    for fname in os.listdir(directory):
+        fpath = os.path.join(directory, fname)
+        if not os.path.isfile(fpath):
+            continue
+        if not _is_dicom(fpath):
+            continue
+        try:
+            ds = pydicom.dcmread(fpath, stop_before_pixels=True, force=True)
+        except Exception:
+            continue
+
+        if series_filter and getattr(ds, 'SeriesDescription', '') != series_filter:
+            continue
+
+        slices.append((fpath, ds))
+
+    if not slices:
+        raise FileNotFoundError(
+            f"No se encontraron archivos DICOM en: {directory}"
+            + (f" (filtro: {series_filter})" if series_filter else "")
+        )
+
+    # Ordenar por ImagePositionPatient[2] (posición axial Z) o InstanceNumber
+    def _sort_key(item):
+        ds = item[1]
+        pos = getattr(ds, 'ImagePositionPatient', None)
+        if pos is not None:
+            return float(pos[2])
+        return int(getattr(ds, 'InstanceNumber', 0))
+
+    slices.sort(key=_sort_key)
+
+    # Leer pixel data de cada slice
+    ref_ds = slices[0][1]
+    rows = ref_ds.Rows
+    cols = ref_ds.Columns
+    pixel_arrays = []
+
+    for fpath, _ in slices:
+        ds = pydicom.dcmread(fpath)
+        arr = ds.pixel_array.astype(np.float32)
+        if arr.shape != (rows, cols):
+            arr = arr[:rows, :cols]
+        pixel_arrays.append(arr)
+
+    volume = np.stack(pixel_arrays, axis=0)  # (D, H, W)
+
+    # Calcular spacing
+    pixel_spacing = list(getattr(ref_ds, 'PixelSpacing', [1.0, 1.0]))
+    slice_thickness = float(getattr(ref_ds, 'SliceThickness', 0.0))
+
+    # Si no hay SliceThickness, calcular desde posiciones
+    if slice_thickness == 0.0 and len(slices) >= 2:
+        pos0 = getattr(slices[0][1], 'ImagePositionPatient', None)
+        pos1 = getattr(slices[1][1], 'ImagePositionPatient', None)
+        if pos0 is not None and pos1 is not None:
+            slice_thickness = abs(float(pos1[2]) - float(pos0[2]))
+
+    # Normalizar volumen
+    volume = _normalize_minmax(volume)
+
+    metadata = {
+        'modality': getattr(ref_ds, 'Modality', 'CT'),
+        'series_description': getattr(ref_ds, 'SeriesDescription', ''),
+        'patient_id': getattr(ref_ds, 'PatientID', ''),
+        'patient_name': str(getattr(ref_ds, 'PatientName', '')),
+        'study_date': getattr(ref_ds, 'StudyDate', ''),
+        'manufacturer': getattr(ref_ds, 'Manufacturer', ''),
+        'pixel_spacing': [float(s) for s in pixel_spacing],
+        'slice_thickness': slice_thickness,
+        'rows': rows,
+        'columns': cols,
+        'bits_stored': getattr(ref_ds, 'BitsStored', 0),
+        'image_orientation': list(getattr(ref_ds, 'ImageOrientationPatient', [])),
+        'image_position_first': list(getattr(slices[0][1], 'ImagePositionPatient', [])),
+        'image_position_last': list(getattr(slices[-1][1], 'ImagePositionPatient', [])),
+    }
+
+    spacing = (float(pixel_spacing[0]), float(pixel_spacing[1]), slice_thickness)
+
+    print(f"Volumen CBCT cargado: {volume.shape[0]} slices, "
+          f"{cols}x{rows} px, spacing {spacing} mm")
+
+    return {
+        'volume': volume,
+        'width': cols,
+        'height': rows,
+        'depth': volume.shape[0],
+        'spacing': spacing,
+        'format': 'cbct',
+        'metadata': metadata,
+    }
 
 
 def _is_dicom(filepath):

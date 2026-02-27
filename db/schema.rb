@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_25_184807) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_27_215210) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -46,6 +46,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_25_184807) do
     t.datetime "created_at", null: false
     t.text "description"
     t.bigint "patient_id"
+    t.jsonb "screw_positions", default: []
     t.string "status", default: "pending", null: false
     t.datetime "updated_at", null: false
     t.index ["patient_id"], name: "index_cases_on_patient_id"

@@ -9,38 +9,27 @@ class BlenderWorkflowJob < ApplicationJob
     run.update!(status: "running", started_at: Time.current)
 
     Dir.mktmpdir("blender_workflow") do |tmpdir|
-      input_path = File.join(tmpdir, "input.stl")
+      upper_path = File.join(tmpdir, "upper.stl")
+      lower_path = File.join(tmpdir, "lower.stl")
       output_path = File.join(tmpdir, "render.png")
 
-      # Download STL from Active Storage to temp file
-      File.open(input_path, "wb") do |f|
-        dental_case.stl_file.download { |chunk| f.write(chunk) }
-      end
+      # Download STL arches from Active Storage
+      download_attachment(dental_case.upper_arch_file, upper_path)
+      download_attachment(dental_case.lower_arch_file, lower_path)
 
-      # Execute Blender pipeline
+      # Build Blender command
       cmd = [
         "blender", "--background", "--python", BLENDER_SCRIPT,
-        "--", input_path, output_path
+        "--", "--upper", upper_path, "--lower", lower_path
       ]
 
-      # Add radiograph if attached
-      if dental_case.radiograph_file.attached?
-        ext = File.extname(dental_case.radiograph_file.filename.to_s).presence || ".png"
-        radio_path = File.join(tmpdir, "radiograph#{ext}")
-        File.open(radio_path, "wb") do |f|
-          dental_case.radiograph_file.download { |chunk| f.write(chunk) }
-        end
-        cmd += [ "--radiograph", radio_path ]
-
-        # Add landmarks if attached
-        if dental_case.landmarks_file.attached?
-          landmarks_path = File.join(tmpdir, "landmarks.json")
-          File.open(landmarks_path, "wb") do |f|
-            dental_case.landmarks_file.download { |chunk| f.write(chunk) }
-          end
-          cmd += [ "--landmarks", landmarks_path ]
-        end
+      # Extract DICOM zip if attached
+      if dental_case.dicom_zip_file.attached?
+        dicom_dir = extract_dicom_zip(dental_case, tmpdir)
+        cmd += [ "--dicom-dir", dicom_dir ] if dicom_dir
       end
+
+      cmd << output_path
 
       log_output = []
       IO.popen(cmd, err: [ :child, :out ]) do |io|
@@ -59,6 +48,8 @@ class BlenderWorkflowJob < ApplicationJob
           log_output: log_output.join
         )
         dental_case.update!(status: "completed")
+        # Purge DICOM zip from Active Storage — large file only needed during processing
+        dental_case.dicom_zip_file.purge if dental_case.dicom_zip_file.attached?
       else
         run.update!(
           status: "failed",
@@ -81,5 +72,45 @@ class BlenderWorkflowJob < ApplicationJob
       run.case.update!(status: "failed")
     end
     raise
+  end
+
+  private
+
+  def download_attachment(attachment, dest_path)
+    File.open(dest_path, "wb") do |f|
+      attachment.download { |chunk| f.write(chunk) }
+    end
+  end
+
+  def extract_dicom_zip(dental_case, tmpdir)
+    zip_path = File.join(tmpdir, "dicom.zip")
+    download_attachment(dental_case.dicom_zip_file, zip_path)
+
+    dicom_dir = File.join(tmpdir, "dicom")
+    FileUtils.mkdir_p(dicom_dir)
+
+    # Extract zip
+    unless system("unzip", "-q", zip_path, "-d", dicom_dir)
+      raise "Failed to extract DICOM zip (exit code: #{$?.exitstatus})"
+    end
+
+    # Find the directory with the most files (CTVolume series)
+    find_ctvolume_dir(dicom_dir)
+  end
+
+  def find_ctvolume_dir(root_dir)
+    best_dir = root_dir
+    best_count = 0
+
+    Dir.glob(File.join(root_dir, "**", "*")).select { |f| File.file?(f) }
+       .group_by { |f| File.dirname(f) }
+       .each do |dir, files|
+      if files.size > best_count
+        best_count = files.size
+        best_dir = dir
+      end
+    end
+
+    best_dir
   end
 end

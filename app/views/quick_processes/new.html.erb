@@ -7,7 +7,7 @@
   <!-- Steps indicator -->
   <div class="flex items-center gap-2">
     <% [
-      { icon: :scan, title: "Radiografía + Modelo" },
+      { icon: :scan, title: "CBCT + Modelos" },
       { icon: :box, title: "Render Blender" },
       { icon: :activity, title: "Vista Oclusal" },
       { icon: :crosshair, title: "Guía de Tornillos" }
@@ -32,71 +32,79 @@
 
   <!-- Form card -->
   <div class="bg-white border border-sky-100 rounded-xl shadow-sm p-8">
-    <%= form_with(model: Case.new, url: quick_process_path, class: "space-y-6") do |f| %>
-      <div>
-        <%= f.label :description, "Descripción (opcional)", class: "block text-sm font-medium text-slate-700 mb-2" %>
-        <%= f.text_field :description,
-            placeholder: "ej. Test render, arco superior…",
-            class: "w-full px-4 py-2.5 rounded-lg border border-sky-200 focus:outline-none focus:ring-2 focus:ring-sky-100 focus:border-sky-400 text-sm transition-all bg-white placeholder:text-slate-400" %>
+    <%= form_with(model: Case.new, url: quick_process_path, class: "space-y-6", data: { turbo: false }) do |f| %>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <%= f.label :patient_id, "Paciente", class: "block text-sm font-medium text-slate-700 mb-2" %>
+          <%= f.select :patient_id,
+              options_from_collection_for_select(@patients, :id, :name),
+              { include_blank: "— Sin paciente —" },
+              class: "w-full px-4 py-2.5 rounded-lg border border-sky-200 focus:outline-none focus:ring-2 focus:ring-sky-100 focus:border-sky-400 text-sm transition-all bg-white" %>
+        </div>
+        <div>
+          <%= f.label :description, "Descripción (opcional)", class: "block text-sm font-medium text-slate-700 mb-2" %>
+          <%= f.text_field :description,
+              placeholder: "ej. Test render, arco superior…",
+              class: "w-full px-4 py-2.5 rounded-lg border border-sky-200 focus:outline-none focus:ring-2 focus:ring-sky-100 focus:border-sky-400 text-sm transition-all bg-white placeholder:text-slate-400" %>
+        </div>
       </div>
 
       <div>
-        <%= f.label :stl_file, "Archivo STL", class: "block text-sm font-medium text-slate-700 mb-2" %>
+        <%= f.label :upper_arch_file, "Arco Superior (STL)", class: "block text-sm font-medium text-slate-700 mb-2" %>
         <div class="border-2 border-dashed border-sky-200 rounded-xl p-12 text-center hover:border-sky-400 hover:bg-sky-50/30 transition-all cursor-pointer" onclick="if(event.target.type!=='file')this.querySelector('input[type=file]').click()">
           <div class="w-16 h-16 bg-sky-50 rounded-full flex items-center justify-center mx-auto mb-4">
             <svg class="w-8 h-8 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
             </svg>
           </div>
-          <h3 class="text-slate-700 font-semibold mb-2">Cargar Archivo STL</h3>
+          <h3 class="text-slate-700 font-semibold mb-2">Cargar Arco Superior</h3>
           <p class="text-sm text-slate-500 max-w-md mx-auto mb-4">
-            Arrastra y suelta el modelo 3D de la boca (.stl) aquí, o haz clic para seleccionar
+            Escaneo intraoral iTero del arco superior (.stl)
           </p>
-          <%= f.file_field :stl_file, accept: ".stl",
+          <%= f.file_field :upper_arch_file, accept: ".stl",
               class: "block w-full text-sm text-slate-600 file:mr-4 file:py-2.5 file:px-6 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-sky-500 file:text-white hover:file:bg-sky-600 file:cursor-pointer file:transition-colors" %>
-          <p class="text-xs text-slate-400 mt-3">Formatos soportados: .stl</p>
+          <p class="text-xs text-slate-400 mt-3">Formato: .stl</p>
         </div>
       </div>
 
       <div>
-        <%= f.label :radiograph_file, "Radiografía (opcional)", class: "block text-sm font-medium text-slate-700 mb-2" %>
-        <div class="border-2 border-dashed border-slate-200 rounded-xl p-8 text-center hover:border-sky-400 hover:bg-sky-50/30 transition-all cursor-pointer" onclick="if(event.target.type!=='file')this.querySelector('input[type=file]').click()">
-          <div class="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-3">
-            <svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <%= f.label :lower_arch_file, "Arco Inferior (STL)", class: "block text-sm font-medium text-slate-700 mb-2" %>
+        <div class="border-2 border-dashed border-sky-200 rounded-xl p-12 text-center hover:border-sky-400 hover:bg-sky-50/30 transition-all cursor-pointer" onclick="if(event.target.type!=='file')this.querySelector('input[type=file]').click()">
+          <div class="w-16 h-16 bg-sky-50 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+            </svg>
+          </div>
+          <h3 class="text-slate-700 font-semibold mb-2">Cargar Arco Inferior</h3>
+          <p class="text-sm text-slate-500 max-w-md mx-auto mb-4">
+            Escaneo intraoral iTero del arco inferior con mordida (.stl)
+          </p>
+          <%= f.file_field :lower_arch_file, accept: ".stl",
+              class: "block w-full text-sm text-slate-600 file:mr-4 file:py-2.5 file:px-6 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-sky-500 file:text-white hover:file:bg-sky-600 file:cursor-pointer file:transition-colors" %>
+          <p class="text-xs text-slate-400 mt-3">Formato: .stl</p>
+        </div>
+      </div>
+
+      <div>
+        <%= f.label :dicom_zip_file, "CBCT (DICOM ZIP)", class: "block text-sm font-medium text-slate-700 mb-2" %>
+        <div class="border-2 border-dashed border-sky-200 rounded-xl p-12 text-center hover:border-sky-400 hover:bg-sky-50/30 transition-all cursor-pointer" onclick="if(event.target.type!=='file')this.querySelector('input[type=file]').click()">
+          <div class="w-16 h-16 bg-sky-50 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4"/>
             </svg>
           </div>
-          <h3 class="text-slate-600 font-semibold mb-1">Cargar Radiografía</h3>
-          <p class="text-sm text-slate-400 max-w-md mx-auto mb-3">
-            Panorámica, periapical u otra radiografía dental (opcional)
+          <h3 class="text-slate-700 font-semibold mb-2">Cargar CBCT</h3>
+          <p class="text-sm text-slate-500 max-w-md mx-auto mb-4">
+            Archivo ZIP con la serie DICOM del CBCT (cone beam CT)
           </p>
-          <%= f.file_field :radiograph_file, accept: ".png,.jpg,.jpeg,.dcm,.dicom",
+          <%= f.file_field :dicom_zip_file, accept: ".zip",
               class: "block w-full text-sm text-slate-600 file:mr-4 file:py-2.5 file:px-6 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-sky-500 file:text-white hover:file:bg-sky-600 file:cursor-pointer file:transition-colors" %>
-          <p class="text-xs text-slate-400 mt-2">Formatos: .png, .jpg, .dcm (DICOM)</p>
-        </div>
-      </div>
-
-      <div>
-        <%= f.label :landmarks_file, "Landmarks (opcional)", class: "block text-sm font-medium text-slate-700 mb-2" %>
-        <div class="border-2 border-dashed border-slate-200 rounded-xl p-8 text-center hover:border-sky-400 hover:bg-sky-50/30 transition-all cursor-pointer" onclick="if(event.target.type!=='file')this.querySelector('input[type=file]').click()">
-          <div class="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-3">
-            <svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-            </svg>
-          </div>
-          <h3 class="text-slate-600 font-semibold mb-1">Landmarks de Registro</h3>
-          <p class="text-sm text-slate-400 max-w-md mx-auto mb-3">
-            Archivo JSON con puntos de referencia para alinear radiografía y modelo 3D
-          </p>
-          <%= f.file_field :landmarks_file, accept: ".json",
-              class: "block w-full text-sm text-slate-600 file:mr-4 file:py-2.5 file:px-6 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-sky-500 file:text-white hover:file:bg-sky-600 file:cursor-pointer file:transition-colors" %>
-          <p class="text-xs text-slate-400 mt-2">Formato: .json</p>
+          <p class="text-xs text-slate-400 mt-3">Formato: .zip con archivos DICOM</p>
         </div>
       </div>
 
       <div class="flex justify-end">
-        <%= f.submit "Procesar STL",
+        <%= f.submit "Procesar Caso",
             class: "bg-sky-500 hover:bg-sky-600 text-white px-8 py-2.5 rounded-lg text-sm font-medium shadow-sm transition-all cursor-pointer flex items-center gap-2" %>
       </div>
     <% end %>

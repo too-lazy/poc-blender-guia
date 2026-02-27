@@ -11,7 +11,7 @@
       <div class="flex justify-between items-start">
         <div>
           <p class="text-sm text-slate-500 font-medium">Pacientes</p>
-          <h3 class="text-3xl font-bold text-slate-900 mt-2"><%= Patient.count %></h3>
+          <h3 class="text-3xl font-bold text-slate-900 mt-2"><%= @patient_count %></h3>
         </div>
         <div class="p-3 rounded-lg bg-sky-50 text-sky-600">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -26,7 +26,7 @@
       <div class="flex justify-between items-start">
         <div>
           <p class="text-sm text-slate-500 font-medium">Casos Activos</p>
-          <h3 class="text-3xl font-bold text-slate-900 mt-2"><%= Case.count %></h3>
+          <h3 class="text-3xl font-bold text-slate-900 mt-2"><%= @case_count %></h3>
         </div>
         <div class="p-3 rounded-lg bg-sky-100 text-sky-700">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -41,7 +41,7 @@
       <div class="flex justify-between items-start">
         <div>
           <p class="text-sm text-slate-500 font-medium">Workflow Runs</p>
-          <h3 class="text-3xl font-bold text-slate-900 mt-2"><%= WorkflowRun.count %></h3>
+          <h3 class="text-3xl font-bold text-slate-900 mt-2"><%= @run_count %></h3>
         </div>
         <div class="p-3 rounded-lg bg-sky-50 text-sky-500">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -8,6 +8,10 @@ export default class extends Controller {
   static values = { src: String }
 
   open(event) {
+    // Remove existing lightbox if any
+    const existing = document.getElementById("lightbox-overlay")
+    if (existing) existing.remove()
+
     const src = event.currentTarget.dataset.lightboxSrcValue || event.currentTarget.src
 
     const overlay = document.createElement("div")

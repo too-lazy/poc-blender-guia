@@ -108,13 +108,7 @@
         <!-- Top header -->
         <header class="h-16 bg-white border-b border-sky-100 flex items-center justify-between px-8 sticky top-0 z-10 shrink-0">
           <div class="flex items-center gap-4 flex-1">
-            <div class="relative max-w-md w-full">
-              <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-              </svg>
-              <input type="text" placeholder="Buscar pacientes, casos o archivos..."
-                class="w-full pl-10 pr-4 py-2 rounded-lg border border-sky-200 focus:outline-none focus:ring-2 focus:ring-sky-100 focus:border-sky-400 text-sm transition-all bg-sky-50/30">
-            </div>
+            <h2 class="text-sm font-medium text-slate-500"><%= yield(:page_title) if content_for?(:page_title) %></h2>
           </div>
           <div class="flex items-center gap-4">
             <button class="relative p-2 rounded-full hover:bg-sky-50 text-slate-500 transition-colors">
@@ -134,14 +128,16 @@
 
         <!-- Flash messages -->
         <% if notice %>
-          <div class="mx-8 mt-4 bg-sky-50 border border-sky-200 text-sky-800 px-4 py-3 rounded-lg text-sm font-medium shrink-0">
+          <div class="mx-8 mt-4 bg-sky-50 border border-sky-200 text-sky-800 px-4 py-3 rounded-lg text-sm font-medium shrink-0 transition-opacity duration-500" id="flash-notice">
             ✓ <%= notice %>
           </div>
+          <script>setTimeout(() => { const el = document.getElementById('flash-notice'); if (el) { el.style.opacity = '0'; setTimeout(() => el.remove(), 500) } }, 5000)</script>
         <% end %>
         <% if alert %>
-          <div class="mx-8 mt-4 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg text-sm font-medium shrink-0">
+          <div class="mx-8 mt-4 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg text-sm font-medium shrink-0 transition-opacity duration-500" id="flash-alert">
             ⚠ <%= alert %>
           </div>
+          <script>setTimeout(() => { const el = document.getElementById('flash-alert'); if (el) { el.style.opacity = '0'; setTimeout(() => el.remove(), 500) } }, 8000)</script>
         <% end %>
 
         <!-- Page content -->
