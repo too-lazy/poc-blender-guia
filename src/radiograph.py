@@ -1,4 +1,11 @@
-"""Carga y procesamiento de radiografías (DICOM single-slice, CBCT multi-slice y 2D)."""
+"""Carga y procesamiento de radiografías (DICOM single-slice, CBCT multi-slice y 2D).
+
+Mejoras sobre la versión inicial:
+- Conversión correcta a Unidades Hounsfield (RescaleSlope + RescaleIntercept)
+- Soporte para DICOM multi-frame (múltiples frames en un solo .dcm)
+- Filtrado de series por SeriesInstanceUID (maneja múltiples reconstrucciones)
+- Cálculo de slice_thickness desde posiciones cuando falta el tag
+"""
 import os
 import numpy as np
 
@@ -54,9 +61,9 @@ def load_dicom_series(directory, series_filter=None):
     if not os.path.isdir(directory):
         raise NotADirectoryError(f"No es un directorio: {directory}")
 
-    # Recopilar archivos DICOM válidos
-    slices = []
-    for fname in os.listdir(directory):
+    # Recopilar archivos DICOM válidos agrupados por SeriesInstanceUID
+    series_map = {}  # uid → [(fpath, ds_headers), ...]
+    for fname in sorted(os.listdir(directory)):
         fpath = os.path.join(directory, fname)
         if not os.path.isfile(fpath):
             continue
@@ -67,16 +74,32 @@ def load_dicom_series(directory, series_filter=None):
         except Exception:
             continue
 
-        if series_filter and getattr(ds, 'SeriesDescription', '') != series_filter:
-            continue
+        uid = getattr(ds, 'SeriesInstanceUID', 'unknown')
+        series_map.setdefault(uid, []).append((fpath, ds))
 
-        slices.append((fpath, ds))
+    if not series_map:
+        raise FileNotFoundError(f"No se encontraron archivos DICOM en: {directory}")
 
-    if not slices:
-        raise FileNotFoundError(
-            f"No se encontraron archivos DICOM en: {directory}"
-            + (f" (filtro: {series_filter})" if series_filter else "")
-        )
+    # Seleccionar serie: por filtro de descripción, o la que tenga más slices
+    if series_filter:
+        matched = {
+            uid: items for uid, items in series_map.items()
+            if any(getattr(ds, 'SeriesDescription', '') == series_filter for _, ds in items)
+        }
+        if not matched:
+            raise FileNotFoundError(
+                f"No se encontró serie '{series_filter}' en: {directory}\n"
+                f"Series disponibles: {[getattr(i[0][1], 'SeriesDescription', uid) for uid, i in series_map.items()]}"
+            )
+        series_map = matched
+
+    # Usar la serie con más slices (probablemente la reconstrucción axial completa)
+    best_uid = max(series_map, key=lambda uid: len(series_map[uid]))
+    slices = series_map[best_uid]
+
+    if len(series_map) > 1:
+        chosen_desc = getattr(slices[0][1], 'SeriesDescription', best_uid)
+        print(f"Múltiples series DICOM encontradas. Usando '{chosen_desc}' ({len(slices)} slices).")
 
     # Ordenar por ImagePositionPatient[2] (posición axial Z) o InstanceNumber
     def _sort_key(item):
@@ -88,7 +111,7 @@ def load_dicom_series(directory, series_filter=None):
 
     slices.sort(key=_sort_key)
 
-    # Leer pixel data de cada slice
+    # Leer pixel data de cada slice con conversión HU
     ref_ds = slices[0][1]
     rows = ref_ds.Rows
     cols = ref_ds.Columns
@@ -97,6 +120,18 @@ def load_dicom_series(directory, series_filter=None):
     for fpath, _ in slices:
         ds = pydicom.dcmread(fpath)
         arr = ds.pixel_array.astype(np.float32)
+
+        # Multi-frame en un solo archivo: expandir slices
+        if arr.ndim == 3:
+            for i in range(arr.shape[0]):
+                frame = _apply_rescale(ds, arr[i])
+                if frame.shape != (rows, cols):
+                    frame = frame[:rows, :cols]
+                pixel_arrays.append(frame)
+            continue
+
+        # Conversión a Hounsfield Units por slice
+        arr = _apply_rescale(ds, arr)
         if arr.shape != (rows, cols):
             arr = arr[:rows, :cols]
         pixel_arrays.append(arr)
@@ -107,19 +142,20 @@ def load_dicom_series(directory, series_filter=None):
     pixel_spacing = list(getattr(ref_ds, 'PixelSpacing', [1.0, 1.0]))
     slice_thickness = float(getattr(ref_ds, 'SliceThickness', 0.0))
 
-    # Si no hay SliceThickness, calcular desde posiciones
+    # Si no hay SliceThickness, calcular desde posiciones consecutivas
     if slice_thickness == 0.0 and len(slices) >= 2:
         pos0 = getattr(slices[0][1], 'ImagePositionPatient', None)
         pos1 = getattr(slices[1][1], 'ImagePositionPatient', None)
         if pos0 is not None and pos1 is not None:
             slice_thickness = abs(float(pos1[2]) - float(pos0[2]))
 
-    # Normalizar volumen
-    volume = _normalize_minmax(volume)
+    # Normalizar volumen (HU → [0, 1] con windowing de tejido blando por defecto)
+    volume = _apply_window_volume(volume)
 
     metadata = {
         'modality': getattr(ref_ds, 'Modality', 'CT'),
         'series_description': getattr(ref_ds, 'SeriesDescription', ''),
+        'series_instance_uid': best_uid,
         'patient_id': getattr(ref_ds, 'PatientID', ''),
         'patient_name': str(getattr(ref_ds, 'PatientName', '')),
         'study_date': getattr(ref_ds, 'StudyDate', ''),
@@ -129,6 +165,8 @@ def load_dicom_series(directory, series_filter=None):
         'rows': rows,
         'columns': cols,
         'bits_stored': getattr(ref_ds, 'BitsStored', 0),
+        'rescale_slope': float(getattr(ref_ds, 'RescaleSlope', 1.0)),
+        'rescale_intercept': float(getattr(ref_ds, 'RescaleIntercept', 0.0)),
         'image_orientation': list(getattr(ref_ds, 'ImageOrientationPatient', [])),
         'image_position_first': list(getattr(slices[0][1], 'ImagePositionPatient', [])),
         'image_position_last': list(getattr(slices[-1][1], 'ImagePositionPatient', [])),
@@ -161,7 +199,13 @@ def _is_dicom(filepath):
 
 
 def _load_dicom(filepath):
-    """Carga un archivo DICOM y extrae la imagen normalizada."""
+    """Carga un archivo DICOM y extrae la imagen normalizada.
+
+    Maneja:
+    - Single-frame y multi-frame DICOM
+    - Conversión a Unidades Hounsfield (RescaleSlope / RescaleIntercept)
+    - Windowing con WindowCenter / WindowWidth
+    """
     try:
         import pydicom
     except ImportError:
@@ -170,14 +214,22 @@ def _load_dicom(filepath):
     ds = pydicom.dcmread(filepath)
     pixel_array = ds.pixel_array.astype(np.float32)
 
-    # Aplicar windowing si está disponible en los metadatos
+    # --- Multi-frame: colapsar a single 2D usando proyección MIP ---
+    if pixel_array.ndim == 3:
+        # (N, H, W) → tomar slice central como imagen representativa
+        mid = pixel_array.shape[0] // 2
+        pixel_array = pixel_array[mid]
+
+    # --- Conversión a Hounsfield Units ---
+    pixel_array = _apply_rescale(ds, pixel_array)
+
+    # --- Windowing ---
     wc = getattr(ds, 'WindowCenter', None)
     ww = getattr(ds, 'WindowWidth', None)
 
     if wc is not None and ww is not None:
-        # Manejar valores que pueden ser listas
-        wc = wc[0] if hasattr(wc, '__iter__') else float(wc)
-        ww = ww[0] if hasattr(ww, '__iter__') else float(ww)
+        wc = float(wc[0]) if hasattr(wc, '__iter__') else float(wc)
+        ww = float(ww[0]) if hasattr(ww, '__iter__') else float(ww)
         image = _apply_window(pixel_array, wc, ww)
     else:
         image = _normalize_minmax(pixel_array)
@@ -191,6 +243,9 @@ def _load_dicom(filepath):
         'bits_stored': getattr(ds, 'BitsStored', 0),
         'window_center': wc,
         'window_width': ww,
+        'rescale_slope': float(getattr(ds, 'RescaleSlope', 1.0)),
+        'rescale_intercept': float(getattr(ds, 'RescaleIntercept', 0.0)),
+        'number_of_frames': int(getattr(ds, 'NumberOfFrames', 1)),
     }
 
     return {
@@ -242,6 +297,39 @@ def _load_image(filepath):
         'format': 'image',
         'metadata': metadata,
     }
+
+
+def _apply_rescale(ds, pixel_array):
+    """Aplica RescaleSlope e RescaleIntercept para obtener Unidades Hounsfield.
+
+    Según DICOM PS3.3 C.11.1.1.2:
+        HU = pixel_value * RescaleSlope + RescaleIntercept
+
+    Si los tags no existen (ej. radiografías CR/DX), devuelve el array sin cambios.
+    """
+    slope = float(getattr(ds, 'RescaleSlope', 1.0))
+    intercept = float(getattr(ds, 'RescaleIntercept', 0.0))
+    if slope == 1.0 and intercept == 0.0:
+        return pixel_array
+    return pixel_array * slope + intercept
+
+
+def _apply_window_volume(volume, center=400.0, width=1800.0):
+    """Aplica windowing a un volumen CBCT usando valores por defecto para hueso dental.
+
+    Valores por defecto (ventana ósea para CBCT dental):
+        Center=400 HU, Width=1800 HU → rango [-500, 1300] HU
+        Adecuado para visualizar hueso alveolar y dientes.
+
+    Args:
+        volume: numpy array (D, H, W) en HU.
+        center: WindowCenter en HU.
+        width: WindowWidth en HU.
+
+    Returns:
+        Array normalizado [0, 1] float32.
+    """
+    return _apply_window(volume, center, width)
 
 
 def _apply_window(pixel_array, center, width):
