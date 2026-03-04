@@ -16,7 +16,7 @@ class QuickProcessesController < ApplicationController
           @case.update!(status: "processing")
         end
         BlenderWorkflowJob.perform_later(run.id)
-        redirect_to quick_process_path, notice: "Workflow started! Processing your files."
+        redirect_to workflow_run_path(run), notice: "Workflow started! Processing your files."
       else
         missing = []
         missing << "upper arch STL" unless @case.upper_arch_file.attached?

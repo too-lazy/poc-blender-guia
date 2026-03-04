@@ -2,6 +2,11 @@
 
 Uso:
     blender --background --python src/cli.py -- --upper upper.stl --lower lower.stl [--dicom-dir path] [--screws screws.json] [output.png]
+
+Opciones de guía:
+    --guide-mode full_arch|local   Modo de cobertura (default: full_arch)
+    --shell-thickness <mm>         Espesor del shell (default: 3.0)
+    --sleeve-height <mm>           Altura del sleeve guía (default: 5.0)
 """
 import sys
 import os
@@ -9,7 +14,7 @@ import os
 # Agregar src/ al path
 sys.path.insert(0, os.path.dirname(__file__))
 
-from loader import clear_scene, load_stl, load_dual_arch
+from loader import clear_scene, load_dual_arch
 from camera import setup_occlusal_camera
 from render import setup_lighting, setup_material, render_to_file
 
@@ -28,6 +33,9 @@ def parse_args(argv):
         'screws_json': None,
         'output_png': None,
         'output_guide_stl': None,
+        'guide_mode': 'full_arch',
+        'shell_thickness': 3.0,
+        'sleeve_height': 5.0,
     }
 
     positional = []
@@ -47,6 +55,15 @@ def parse_args(argv):
             i += 2
         elif args[i] == '--output-guide' and i + 1 < len(args):
             parsed['output_guide_stl'] = os.path.abspath(args[i + 1])
+            i += 2
+        elif args[i] == '--guide-mode' and i + 1 < len(args):
+            parsed['guide_mode'] = args[i + 1]
+            i += 2
+        elif args[i] == '--shell-thickness' and i + 1 < len(args):
+            parsed['shell_thickness'] = float(args[i + 1])
+            i += 2
+        elif args[i] == '--sleeve-height' and i + 1 < len(args):
+            parsed['sleeve_height'] = float(args[i + 1])
             i += 2
         else:
             positional.append(args[i])
@@ -70,6 +87,9 @@ def main():
         print("  --dicom-dir <path>     Directorio con serie DICOM (CBCT)")
         print("  --screws <json>        Posiciones de tornillos (JSON)")
         print("  --output-guide <path>  Exportar guía quirúrgica STL")
+        print("  --guide-mode <mode>    Modo de cobertura: full_arch (default) o local")
+        print("  --shell-thickness <n>  Espesor del shell en mm (default: 3.0)")
+        print("  --sleeve-height <n>    Altura del sleeve guía en mm (default: 5.0)")
         sys.exit(1)
 
     output_png = parsed['output_png']
@@ -94,7 +114,7 @@ def main():
     # Guide generation (Phase 3)
     guide_obj = None
     if parsed['screws_json']:
-        guide_obj = _generate_guide(upper_obj, parsed['screws_json'], parsed['output_guide_stl'])
+        guide_obj = _generate_guide(upper_obj, parsed['screws_json'], parsed['output_guide_stl'], parsed)
 
     print("Configurando cámara oclusal...")
     additional = [arches['lower']]
@@ -128,7 +148,7 @@ def _process_cbct(dicom_dir):
           f"spacing {cbct_data['spacing']} mm")
 
 
-def _generate_guide(upper_obj, screws_json, output_guide_stl):
+def _generate_guide(upper_obj, screws_json, output_guide_stl, parsed=None):
     """Genera guía quirúrgica a partir de posiciones de tornillos."""
     from guide import load_screw_positions, create_surgical_guide, export_guide_stl
 
@@ -143,8 +163,14 @@ def _generate_guide(upper_obj, screws_json, output_guide_stl):
         print("Advertencia: no hay posiciones de tornillos definidas, saltando guía")
         return None
 
+    opts = parsed or {}
     print(f"Generando guía quirúrgica con {len(screw_positions)} tornillos...")
-    result = create_surgical_guide(upper_obj, screw_positions)
+    result = create_surgical_guide(
+        upper_obj, screw_positions,
+        guide_mode=opts.get('guide_mode', 'full_arch'),
+        shell_thickness=opts.get('shell_thickness', 3.0),
+        sleeve_height=opts.get('sleeve_height', 5.0),
+    )
     guide_obj = result['guide_obj']
 
     if output_guide_stl:

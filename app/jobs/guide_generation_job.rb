@@ -37,7 +37,7 @@ class GuideGenerationJob < ApplicationJob
         io.each_line { |line| log_output << line }
       end
 
-      if $?.success?
+      if $?.success? && File.exist?(guide_stl_path)
         # Attach guide STL
         if File.exist?(guide_stl_path)
           dental_case.guide_stl_file.attach(
